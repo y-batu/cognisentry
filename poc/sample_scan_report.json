@@ -18,32 +18,31 @@
       "name": "customer_id",
       "classification": "Sensitive",
       "reasons": [
-        "column name suggests sensitive"
+        "column name suggests sensitive",
+        "values resemble structured identifiers"
       ]
     },
     {
       "name": "email",
-      "classification": "PII",
+      "classification": "Sensitive",
       "reasons": [
-        "column name suggests pii",
+        "column name suggests sensitive",
         "values resemble email addresses"
       ]
     },
     {
       "name": "phone",
-      "classification": "PII",
+      "classification": "Sensitive",
       "reasons": [
-        "column name suggests pii",
+        "column name suggests sensitive",
         "values resemble phone numbers"
       ]
     },
     {
       "name": "ip_address",
-      "classification": "Sensitive",
+      "classification": "Potentially Sensitive",
       "reasons": [
         "column name suggests potentially sensitive",
-        "column name suggests potentially sensitive",
-        "values resemble phone numbers",
         "values resemble IPv4 addresses"
       ]
     },
@@ -65,7 +64,8 @@
       "unique_count": 5,
       "classification": "Sensitive",
       "reasons": [
-        "column name suggests sensitive"
+        "column name suggests sensitive",
+        "values resemble structured identifiers"
       ]
     },
     {
@@ -74,28 +74,23 @@
       "missing_count": 1,
       "missing_percent": 16.67,
       "unique_count": 4,
-      "classification": "PII",
+      "classification": "Sensitive",
       "reasons": [
-        "column name suggests pii",
+        "column name suggests sensitive",
         "values resemble email addresses"
       ]
     },
     {
       "name": "phone",
-      "type": "number",
+      "type": "text",
       "missing_count": 0,
       "missing_percent": 0.0,
       "unique_count": 5,
-      "classification": "PII",
+      "classification": "Sensitive",
       "reasons": [
-        "column name suggests pii",
+        "column name suggests sensitive",
         "values resemble phone numbers"
-      ],
-      "numeric": {
-        "min": 12025550101.0,
-        "max": 12025550105.0,
-        "average": 12025550103.1667
-      }
+      ]
     },
     {
       "name": "ip_address",
@@ -103,11 +98,9 @@
       "missing_count": 0,
       "missing_percent": 0.0,
       "unique_count": 5,
-      "classification": "Sensitive",
+      "classification": "Potentially Sensitive",
       "reasons": [
         "column name suggests potentially sensitive",
-        "column name suggests potentially sensitive",
-        "values resemble phone numbers",
         "values resemble IPv4 addresses"
       ]
     },

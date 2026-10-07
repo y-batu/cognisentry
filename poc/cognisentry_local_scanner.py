@@ -9,15 +9,16 @@ EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 PHONE_RE = re.compile(r'^\+?[0-9][0-9\s().-]{7,}$')
 URL_RE = re.compile(r'^https?://', re.I)
 TOKEN_RE = re.compile(r'^[A-Za-z0-9_\-]{24,}$')
+ID_RE = re.compile(r'^[A-Za-z]{2,6}[-_][0-9]{3,}$')
 SENSITIVE_NAME_HINTS = {
-    'email': 'PII', 'e_mail': 'PII', 'phone': 'PII', 'mobile': 'PII',
+    'email': 'Sensitive', 'e_mail': 'Sensitive', 'phone': 'Sensitive', 'mobile': 'Sensitive',
     'ip': 'Potentially Sensitive', 'ip_address': 'Potentially Sensitive',
     'customer_id': 'Sensitive', 'user_id': 'Sensitive', 'national_id': 'Sensitive',
     'ssn': 'Sensitive', 'password': 'Secret / High Risk', 'passwd': 'Secret / High Risk',
     'api_key': 'Secret / High Risk', 'apikey': 'Secret / High Risk', 'token': 'Secret / High Risk',
     'secret': 'Secret / High Risk'
 }
-RISK_ORDER = {'Standard':0, 'Potentially Sensitive':1, 'PII':2, 'Sensitive':2, 'Secret / High Risk':3}
+RISK_ORDER = {'Standard':0, 'Potentially Sensitive':1, 'Sensitive':2, 'Secret / High Risk':3}
 
 def normalize_name(name):
     return re.sub(r'[^a-z0-9]+', '_', name.strip().lower()).strip('_')
@@ -47,15 +48,17 @@ def classify_column(name, values):
     for hint, risk in SENSITIVE_NAME_HINTS.items():
         if hint == norm or hint in norm:
             classification = max(classification, risk, key=lambda x: RISK_ORDER[x])
-            reasons.append(f'column name suggests {risk.lower()}')
+            reason = f'column name suggests {risk.lower()}'
+            if reason not in reasons: reasons.append(reason)
     present = [v.strip() for v in values if v.strip()]
     if not present: return classification, reasons
     sample = present[:200]
     counts = Counter()
     for value in sample:
         if EMAIL_RE.match(value): counts['email'] += 1
-        if PHONE_RE.match(value): counts['phone'] += 1
         if is_ipv4(value): counts['ipv4'] += 1
+        elif PHONE_RE.match(value): counts['phone'] += 1
+        if ID_RE.match(value): counts['identifier'] += 1
         if URL_RE.match(value): counts['url'] += 1
         if TOKEN_RE.match(value) and not EMAIL_RE.match(value): counts['token_like'] += 1
     threshold = max(1, math.ceil(len(sample)*0.2))
@@ -67,6 +70,8 @@ def classify_column(name, values):
         classification = max(classification, 'Potentially Sensitive', key=lambda x: RISK_ORDER[x]); reasons.append('values resemble IPv4 addresses')
     if counts['token_like'] >= threshold:
         classification = max(classification, 'Secret / High Risk', key=lambda x: RISK_ORDER[x]); reasons.append('values resemble long token/secret strings')
+    if counts['identifier'] >= threshold:
+        classification = max(classification, 'Potentially Sensitive', key=lambda x: RISK_ORDER[x]); reasons.append('values resemble structured identifiers')
     if counts['url'] >= threshold and classification == 'Standard': reasons.append('values resemble URLs')
     return classification, reasons
 
@@ -83,6 +88,7 @@ def scan_csv(path):
         missing = sum(1 for v in values if not v.strip())
         inferred = infer_type(values)
         classification, reasons = classify_column(field, values)
+        if any('phone numbers' in r for r in reasons) and inferred == 'number': inferred = 'text'
         highest = max(highest, RISK_ORDER[classification])
         profile = {
             'name': field, 'type': inferred, 'missing_count': missing,
