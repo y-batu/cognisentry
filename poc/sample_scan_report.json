@@ -18,23 +18,22 @@
       "name": "customer_id",
       "classification": "Sensitive",
       "reasons": [
-        "column name suggests sensitive",
-        "values resemble structured identifiers"
+        "column name suggests sensitive"
       ]
     },
     {
       "name": "email",
-      "classification": "Sensitive",
+      "classification": "PII",
       "reasons": [
-        "column name suggests sensitive",
+        "column name suggests pii",
         "values resemble email addresses"
       ]
     },
     {
       "name": "phone",
-      "classification": "Sensitive",
+      "classification": "PII",
       "reasons": [
-        "column name suggests sensitive",
+        "column name suggests pii",
         "values resemble phone numbers"
       ]
     },
@@ -50,8 +49,7 @@
       "name": "api_token",
       "classification": "Secret / High Risk",
       "reasons": [
-        "column name suggests secret / high risk",
-        "values resemble long token/secret strings"
+        "column name suggests secret / high risk"
       ]
     }
   ],
@@ -64,8 +62,7 @@
       "unique_count": 5,
       "classification": "Sensitive",
       "reasons": [
-        "column name suggests sensitive",
-        "values resemble structured identifiers"
+        "column name suggests sensitive"
       ]
     },
     {
@@ -74,23 +71,24 @@
       "missing_count": 1,
       "missing_percent": 16.67,
       "unique_count": 4,
-      "classification": "Sensitive",
+      "classification": "PII",
       "reasons": [
-        "column name suggests sensitive",
+        "column name suggests pii",
         "values resemble email addresses"
       ]
     },
     {
       "name": "phone",
-      "type": "text",
+      "type": "number",
       "missing_count": 0,
       "missing_percent": 0.0,
       "unique_count": 5,
-      "classification": "Sensitive",
+      "classification": "PII",
       "reasons": [
-        "column name suggests sensitive",
+        "column name suggests pii",
         "values resemble phone numbers"
-      ]
+      ],
+      "stats_withheld": "column classified as PII"
     },
     {
       "name": "ip_address",
@@ -112,8 +110,7 @@
       "unique_count": 5,
       "classification": "Secret / High Risk",
       "reasons": [
-        "column name suggests secret / high risk",
-        "values resemble long token/secret strings"
+        "column name suggests secret / high risk"
       ]
     },
     {
@@ -146,12 +143,24 @@
       "missing_percent": 33.33,
       "unique_count": 3,
       "classification": "Standard",
-      "reasons": []
+      "reasons": [],
+      "free_text": true,
+      "free_text_inspection": {
+        "cells_inspected": 4,
+        "findings": {
+          "email": 0,
+          "phone": 0,
+          "secret": 0,
+          "instruction_like": 0
+        }
+      }
     }
   ],
   "limitations": [
     "Heuristic detection can produce false positives and false negatives.",
     "This PoC does not provide compliance certification or a security guarantee.",
-    "No Claude API call is made by this scanner."
+    "No Claude API call is made by this scanner.",
+    "Free-text inspection covers at most the first 1000 non-empty values per column.",
+    "Instruction-like text detection is a warning signal only, not a security boundary."
   ]
 }
