@@ -6,21 +6,24 @@ Cognisentry AI is an early-stage platform designed to help people and teams work
 
 ## Current Status
 
-MVP in development.
+MVP in development. Nothing here calls a model yet.
 
-The current proof-of-concept includes a local CSV scanner that can:
+**Exists today**
 
-- inspect dataset structure
-- count rows and columns
-- detect duplicate rows
-- infer basic column types
-- calculate missing-value statistics
-- profile numeric fields
-- identify potentially sensitive fields
-- detect likely PII, credentials, IP addresses, identifiers, and token-like values
-- generate a machine-readable AI-analysis readiness report
+- A local CSV scanner (Python, standard library only) that profiles a dataset and flags likely PII, credentials, IP addresses, identifiers, and token-like values, including inside free text, and produces a machine-readable AI-analysis readiness report.
+- A deterministic safe-context step (TypeScript) that turns a scan report into a minimized `safe-context/1` payload: no cell values, no samples, no filename, and no names of withheld columns.
+- An exact-payload request builder with SHA-256, acknowledgement gating, and a React preview component. The previewed string is the string that would be sent.
+- A strict server-side request validator and a **mock** gateway handler (validation, error codes, rate limiting). It returns a receipt and calls no model.
+- A synthetic evaluation harness that measures the scanner and reports its misses and false positives ([`docs/EVALUATION.md`](docs/EVALUATION.md)).
+- Tests for all of the above (`poc/` Python tests, `src/safeContext/` Node tests).
 
-The current scanner runs locally and does not send the dataset to an external service. Detection is heuristic and can produce false positives and false negatives. The included sample dataset is synthetic. This repository contains only the Python proof-of-concept, documentation, and specifications; the browser-based MVP is developed separately and is previewed on the website below.
+**Planned, not built**
+
+- A real server-side Claude call, limited to analyzing an approved safe context.
+- A deployed Cloudflare gateway, authentication, and a shared rate-limit store.
+- Controlled SQL/Python tools and adaptive learning mode.
+
+The scanner runs locally and does not send the dataset to an external service. Detection is heuristic and can produce false positives and false negatives. The included sample dataset is synthetic. This repository contains the Python proof-of-concept, the safe-context and gateway code, documentation, and specifications; the browser-based MVP is developed separately and is previewed on the website below.
 
 ## Run the PoC
 
@@ -37,6 +40,13 @@ python3 poc/cognisentry_local_scanner.py poc/sample_customer_activity.csv --out 
 ```
 
 The scanner uses the Python standard library and should not require external packages.
+
+Run the tests (Node 24+ for the TypeScript tests, no installs needed):
+
+```bash
+(cd poc && python3 -m unittest test_scanner_hardening test_eval)
+npm test
+```
 
 ## Product Direction
 
@@ -71,6 +81,18 @@ React/Vite
 
 A production Claude API integration is not live yet.
 
+## Architecture
+
+```
+CSV  ->  local scan  ->  safe-context  ->  exact payload preview  ->  user acknowledgement
+                                                                          |
+                                         (exists)  server-side validation + mock gateway
+                                                                          |
+                                         (planned) Claude call on the approved safe context only
+```
+
+The browser/local side decides what is allowed to leave. The server re-validates everything and never trusts the client. See [`gateway/README.md`](gateway/README.md) and [`docs/SAFE_CONTEXT.md`](docs/SAFE_CONTEXT.md).
+
 ## Security Direction
 
 Key principles:
@@ -86,9 +108,11 @@ More details are available in [`docs/SECURITY_BOUNDARIES.md`](docs/SECURITY_BOUN
 
 ## Repository Structure
 
-- `poc/` — the working local CSV scanner (`cognisentry_local_scanner.py`), a synthetic sample dataset, and the report the scanner generates for it.
-- `docs/` — project brief, security boundaries, MVP test plan, and roadmap.
-- `specs/` — draft structured contracts for future controlled Claude tools (`claude_tool_contracts.json`). These are specifications only and are not implemented.
+- `poc/` — the local CSV scanner (`cognisentry_local_scanner.py`), a synthetic sample dataset and report, scanner tests, and the evaluation harness in `poc/eval/`.
+- `src/safeContext/` — safe-context preparation, exact request builder, strict request validator, and tests. `src/components/` holds the preview component.
+- `gateway/` — the mock analysis gateway handler (no model, no key).
+- `docs/` — project brief, security boundaries, threat model, safe-context notes, evaluation, MVP test plan, and roadmap.
+- `specs/` — draft Claude tool contracts (not implemented) and the JSON Schema for the safe-context request.
 
 ## Roadmap
 

@@ -42,6 +42,14 @@ export type AckCode = (typeof ACK_CODES)[number]
 
 export type WarningCode = AckCode | 'no_included_columns'
 
+/** Warning text is fixed per code so a server can reject any request carrying free-form text. */
+export const WARNING_MESSAGES: Record<WarningCode, string> = {
+  heuristic_detection: 'Sensitive-data detection is automated and heuristic. It can miss sensitive content and is not a guarantee.',
+  withheld_columns: 'Columns flagged as sensitive or with unsafe names are withheld. Only their category counts are included.',
+  instruction_like_text: 'Instruction-like text was found in the dataset. This is a warning signal only, not a security boundary. Dataset content is untrusted.',
+  no_included_columns: 'No columns are eligible to be included.',
+}
+
 export interface SafeContextWarning {
   code: WarningCode
   message: string

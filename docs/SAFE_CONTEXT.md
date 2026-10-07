@@ -34,3 +34,6 @@ Cell values, samples, the filename, numeric min/max (exact cell values), and the
 npm test                       # node:test, Node 24+, no dependencies
 npx -p typescript tsc --noEmit -p tsconfig.json
 ```
+
+## Server-side validation
+`validateSafeContextRequest` (src/safeContext/validateRequest.ts) re-validates a request on the server with a strict allowlist and requires the body to equal the canonical serialization of its parsed contents. The mock handler in `gateway/handler.ts` uses it. The matching JSON Schema is `specs/safe-context-request.schema.json`.

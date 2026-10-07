@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "safe-context-request/1",
+  "description": "Body of a future analysis request. Contains schema-level metadata and counts only: no cell values, samples, filenames, or names of withheld columns. Validated server-side by src/safeContext/validateRequest.ts, which is stricter than this schema (fixed warning text, count consistency, canonical serialization).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["request_schema", "safe_context", "acknowledged"],
+  "properties": {
+    "request_schema": { "const": "safe-context-request/1" },
+    "acknowledged": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "enum": ["heuristic_detection", "withheld_columns", "instruction_like_text"] }
+    },
+    "safe_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "dataset", "scanner_readiness", "included_columns", "withheld", "warnings"],
+      "properties": {
+        "schema_version": { "const": "safe-context/1" },
+        "dataset": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rows", "columns", "duplicate_rows"],
+          "properties": {
+            "rows": { "type": "integer", "minimum": 0 },
+            "columns": { "type": "integer", "minimum": 0 },
+            "duplicate_rows": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "scanner_readiness": { "enum": ["Sensitive data detected", "Review recommended", "No findings (heuristic)"] },
+        "included_columns": {
+          "type": "array",
+          "maxItems": 2000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "type", "missing_count", "missing_percent", "unique_count"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1, "maxLength": 64 },
+              "type": { "enum": ["number", "boolean", "text", "empty"] },
+              "missing_count": { "type": "integer", "minimum": 0 },
+              "missing_percent": { "type": "number", "minimum": 0, "maximum": 100 },
+              "unique_count": { "type": "integer", "minimum": 0 },
+              "numeric": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["average"],
+                "properties": { "average": { "type": "number" } }
+              },
+              "free_text": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["cells_inspected"],
+                "properties": { "cells_inspected": { "type": "integer", "minimum": 0 } }
+              }
+            }
+          }
+        },
+        "withheld": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["total", "by_category", "user_excluded"],
+          "properties": {
+            "total": { "type": "integer", "minimum": 0 },
+            "user_excluded": { "type": "integer", "minimum": 0 },
+            "by_category": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["Potentially Sensitive", "PII", "Sensitive", "Secret / High Risk", "Unsafe column name"],
+              "properties": {
+                "Potentially Sensitive": { "type": "integer", "minimum": 0 },
+                "PII": { "type": "integer", "minimum": 0 },
+                "Sensitive": { "type": "integer", "minimum": 0 },
+                "Secret / High Risk": { "type": "integer", "minimum": 0 },
+                "Unsafe column name": { "type": "integer", "minimum": 0 }
+              }
+            }
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "message", "requires_acknowledgement"],
+            "properties": {
+              "code": { "enum": ["heuristic_detection", "withheld_columns", "instruction_like_text", "no_included_columns"] },
+              "message": { "type": "string", "maxLength": 300 },
+              "requires_acknowledgement": { "type": "boolean" },
+              "columns": { "type": "array", "items": { "type": "string", "maxLength": 64 } },
+              "cells": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

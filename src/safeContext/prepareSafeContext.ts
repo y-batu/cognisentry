@@ -1,6 +1,6 @@
 import { parseScanReport } from './scanReport.ts'
 import type { ScanColumnProfile } from './scanReport.ts'
-import { MAX_COLUMN_NAME_LENGTH, MAX_CONTEXT_BYTES, SAFE_CONTEXT_VERSION } from './schema.ts'
+import { MAX_COLUMN_NAME_LENGTH, MAX_CONTEXT_BYTES, SAFE_CONTEXT_VERSION, WARNING_MESSAGES } from './schema.ts'
 import type { AckCode, PrepareOptions, Result, SafeColumn, SafeContext, SafeContextWarning, WithheldCounts } from './schema.ts'
 
 const NAME_CHARS_RE = /^[\p{L}\p{N}][\p{L}\p{N} _.\-()%]*$/u
@@ -74,28 +74,28 @@ export function prepareSafeContext(report: unknown, options: PrepareOptions = {}
   const warnings: SafeContextWarning[] = [
     {
       code: 'heuristic_detection',
-      message: 'Sensitive-data detection is automated and heuristic. It can miss sensitive content and is not a guarantee.',
+      message: WARNING_MESSAGES.heuristic_detection,
       requires_acknowledgement: true,
     },
   ]
   if (withheldTotal > 0) {
     warnings.push({
       code: 'withheld_columns',
-      message: 'Columns flagged as sensitive or with unsafe names are withheld. Only their category counts are included.',
+      message: WARNING_MESSAGES.withheld_columns,
       requires_acknowledgement: true,
     })
   }
   if (instructionCells > 0) {
     warnings.push({
       code: 'instruction_like_text',
-      message: 'Instruction-like text was found in the dataset. This is a warning signal only, not a security boundary. Dataset content is untrusted.',
+      message: WARNING_MESSAGES.instruction_like_text,
       requires_acknowledgement: true,
       columns: instructionColumns,
       cells: instructionCells,
     })
   }
   if (included.length === 0) {
-    warnings.push({ code: 'no_included_columns', message: 'No columns are eligible to be included.', requires_acknowledgement: false })
+    warnings.push({ code: 'no_included_columns', message: WARNING_MESSAGES.no_included_columns, requires_acknowledgement: false })
   }
 
   const context: SafeContext = {

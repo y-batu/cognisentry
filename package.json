@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Deterministic safe-context preparation for Cognisentry AI. No runtime dependencies.",
   "scripts": {
-    "test": "node --test src/safeContext/prepareSafeContext.test.ts",
+    "test": "node --test src/safeContext/prepareSafeContext.test.ts src/safeContext/gateway.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   }
 }

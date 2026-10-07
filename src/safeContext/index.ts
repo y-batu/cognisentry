@@ -1,5 +1,7 @@
 export { prepareSafeContext, requiredAcknowledgements, isSafeColumnName } from './prepareSafeContext.ts'
 export { buildSafeContextRequest, serializeRequest, sha256Hex } from './request.ts'
+export { validateSafeContextRequest } from './validateRequest.ts'
+export type { ValidationCode, ValidationResult } from './validateRequest.ts'
 export type { SafeContextRequest } from './request.ts'
 export { parseScanReport } from './scanReport.ts'
 export * from './schema.ts'
