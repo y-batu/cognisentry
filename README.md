@@ -20,7 +20,7 @@ The current proof-of-concept includes a local CSV scanner that can:
 - detect likely PII, credentials, IP addresses, identifiers, and token-like values
 - generate a machine-readable AI-analysis readiness report
 
-The current scanner runs locally and does not send the dataset to an external service. Detection is heuristic and can produce false positives and false negatives. The included sample dataset is synthetic.
+The current scanner runs locally and does not send the dataset to an external service. Detection is heuristic and can produce false positives and false negatives. The included sample dataset is synthetic. This repository contains only the Python proof-of-concept, documentation, and specifications; the browser-based MVP is developed separately and is previewed on the website below.
 
 ## Run the PoC
 
