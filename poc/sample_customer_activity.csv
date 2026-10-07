@@ -1,0 +1,7 @@
+customer_id,email,phone,ip_address,api_token,revenue,plan,notes
+CUST-1001,alice@example.test,+12025550101,192.0.2.10,sk_demo_4QZ8afLpd82gK0nX7mYvR3Ts,120.50,Pro,requested export
+CUST-1002,bob@example.test,+12025550102,192.0.2.11,sk_demo_n9P2wsD7Vx48KqT1Ym5Lc6Az,89.00,Basic,
+CUST-1003,carol@example.test,+12025550103,198.51.100.7,sk_demo_mP7Qv4K9Rz21Ts6Yx3Ab8WcN,155.75,Pro,billing follow-up
+CUST-1004,dan@example.test,+12025550104,203.0.113.21,sk_demo_a8L2Dn6Vq9Xc4Rt7Pm1Ys5Zw,0,Trial,missing payment
+CUST-1004,dan@example.test,+12025550104,203.0.113.21,sk_demo_a8L2Dn6Vq9Xc4Rt7Pm1Ys5Zw,0,Trial,missing payment
+CUST-1005,,+12025550105,203.0.113.22,sk_demo_t7X3Km9Qv2Lp5Ra8Wn4Dz1Cy,210.25,Enterprise,

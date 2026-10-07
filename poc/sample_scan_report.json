@@ -1,0 +1,164 @@
+{
+  "product": "Cognisentry AI",
+  "scanner": "Local CSV Security & Data Quality Scanner PoC",
+  "privacy": {
+    "processing": "local",
+    "uploaded": false,
+    "note": "This script reads the CSV locally and does not send it to any external service."
+  },
+  "dataset": {
+    "filename": "sample_customer_activity.csv",
+    "rows": 6,
+    "columns": 8,
+    "duplicate_rows": 1
+  },
+  "ai_analysis_readiness": "Sensitive data detected",
+  "flagged_fields": [
+    {
+      "name": "customer_id",
+      "classification": "Sensitive",
+      "reasons": [
+        "column name suggests sensitive"
+      ]
+    },
+    {
+      "name": "email",
+      "classification": "PII",
+      "reasons": [
+        "column name suggests pii",
+        "values resemble email addresses"
+      ]
+    },
+    {
+      "name": "phone",
+      "classification": "PII",
+      "reasons": [
+        "column name suggests pii",
+        "values resemble phone numbers"
+      ]
+    },
+    {
+      "name": "ip_address",
+      "classification": "Sensitive",
+      "reasons": [
+        "column name suggests potentially sensitive",
+        "column name suggests potentially sensitive",
+        "values resemble phone numbers",
+        "values resemble IPv4 addresses"
+      ]
+    },
+    {
+      "name": "api_token",
+      "classification": "Secret / High Risk",
+      "reasons": [
+        "column name suggests secret / high risk",
+        "values resemble long token/secret strings"
+      ]
+    }
+  ],
+  "column_profiles": [
+    {
+      "name": "customer_id",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 5,
+      "classification": "Sensitive",
+      "reasons": [
+        "column name suggests sensitive"
+      ]
+    },
+    {
+      "name": "email",
+      "type": "text",
+      "missing_count": 1,
+      "missing_percent": 16.67,
+      "unique_count": 4,
+      "classification": "PII",
+      "reasons": [
+        "column name suggests pii",
+        "values resemble email addresses"
+      ]
+    },
+    {
+      "name": "phone",
+      "type": "number",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 5,
+      "classification": "PII",
+      "reasons": [
+        "column name suggests pii",
+        "values resemble phone numbers"
+      ],
+      "numeric": {
+        "min": 12025550101.0,
+        "max": 12025550105.0,
+        "average": 12025550103.1667
+      }
+    },
+    {
+      "name": "ip_address",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 5,
+      "classification": "Sensitive",
+      "reasons": [
+        "column name suggests potentially sensitive",
+        "column name suggests potentially sensitive",
+        "values resemble phone numbers",
+        "values resemble IPv4 addresses"
+      ]
+    },
+    {
+      "name": "api_token",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 5,
+      "classification": "Secret / High Risk",
+      "reasons": [
+        "column name suggests secret / high risk",
+        "values resemble long token/secret strings"
+      ]
+    },
+    {
+      "name": "revenue",
+      "type": "number",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 5,
+      "classification": "Standard",
+      "reasons": [],
+      "numeric": {
+        "min": 0.0,
+        "max": 210.25,
+        "average": 95.9167
+      }
+    },
+    {
+      "name": "plan",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 4,
+      "classification": "Standard",
+      "reasons": []
+    },
+    {
+      "name": "notes",
+      "type": "text",
+      "missing_count": 2,
+      "missing_percent": 33.33,
+      "unique_count": 3,
+      "classification": "Standard",
+      "reasons": []
+    }
+  ],
+  "limitations": [
+    "Heuristic detection can produce false positives and false negatives.",
+    "This PoC does not provide compliance certification or a security guarantee.",
+    "No Claude API call is made by this scanner."
+  ]
+}

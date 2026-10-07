@@ -1,0 +1,10 @@
+{
+  "version": "0.1",
+  "status": "draft",
+  "tools": [
+    {"name":"inspect_schema","description":"Return safe schema metadata for an approved dataset.","input":{"dataset_id":"string"},"output":{"columns":"array","row_count":"integer","sensitivity_summary":"array"}},
+    {"name":"check_sensitive_data","description":"Run deterministic/heuristic sensitive-data checks before model analysis.","input":{"dataset_id":"string","columns":"array|null"},"output":{"findings":"array","highest_risk":"string"}},
+    {"name":"prepare_safe_context","description":"Create minimized approved context for a future Claude request.","input":{"dataset_id":"string","exclude_columns":"array","sample_rows":"integer"},"output":{"schema":"object","statistics":"object","safe_samples":"array"}},
+    {"name":"run_sql","description":"Execute validated read-only analytical SQL in an isolated environment.","input":{"dataset_id":"string","query":"string"},"output":{"columns":"array","rows":"array","truncated":"boolean"}}
+  ]
+}
