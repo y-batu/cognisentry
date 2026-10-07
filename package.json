@@ -1,0 +1,11 @@
+{
+  "name": "cognisentry-safe-context",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Deterministic safe-context preparation for Cognisentry AI. No runtime dependencies.",
+  "scripts": {
+    "test": "node --test src/safeContext/prepareSafeContext.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  }
+}
