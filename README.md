@@ -27,6 +27,10 @@ MVP in development. Nothing here calls a model yet.
 
 The scanner runs locally and does not send the dataset to an external service. Detection is heuristic and can produce false positives and false negatives. The included sample dataset is synthetic. This repository contains the Python reference scanner, the browser demo, the safe-context and gateway code, documentation, and specifications. The marketing page is on the website below.
 
+## Demo
+
+See [`docs/DEMO.md`](docs/DEMO.md) for a walkthrough with real scanner output on the synthetic sample.
+
 ## Run the PoC
 
 From the repository root:
@@ -90,7 +94,7 @@ React/Vite
 → Claude API
 → controlled analytical tools
 
-A production Claude API integration is not live yet.
+A production Claude API integration is not live yet. Where Claude is used, why, and the rollout are in [`docs/CLAUDE_INTEGRATION.md`](docs/CLAUDE_INTEGRATION.md).
 
 ## Architecture
 
