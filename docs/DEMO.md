@@ -39,6 +39,8 @@ npm run dev
 
 ## 3. Gateway and Claude analysis
 
+In the app, step 3 ("Send safe context to Claude") unlocks after you acknowledge the warnings. With `ANTHROPIC_API_KEY` set for `npm run dev` it returns a live analysis; without it the server validates and says no model was called.
+
 ```bash
 npm run demo:analyze                       # mock: validates the request, returns a receipt
 ANTHROPIC_API_KEY=... npm run demo:analyze  # live: one Claude call, structured analysis returned
@@ -49,6 +51,6 @@ The request sent to Claude is the exact safe-context payload from step 2. A live
 ## 4. Verify
 
 ```bash
-npm test                                                    # 62 TypeScript tests
+npm test                                                    # 66 TypeScript tests
 (cd poc && python3 -m unittest test_scanner_hardening test_eval)   # 42 Python tests
 ```

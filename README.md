@@ -6,11 +6,11 @@ Cognisentry AI is an early-stage platform designed to help people and teams work
 
 ## Current Status
 
-MVP in development. The server-side Claude call is implemented and unit-tested with a fake client; it has not yet been run against the live API, and the browser app does not call it yet.
+MVP in development. The server-side Claude call is implemented and unit-tested with a fake client; it has not yet been run against the live API. The browser app is wired to it (step 3), behind explicit acknowledgement.
 
 **Exists today**
 
-- A browser app (Vite + React) that runs the whole local flow: choose a CSV, scan it in the browser, review the findings, and preview the exact safe-context request. It makes no network requests with your data (a test enforces this in code).
+- A browser app (Vite + React) that runs the whole local flow: choose a CSV, scan it in the browser, review the findings, and preview the exact safe-context request. The only network call is one `POST /api/analyze` with the previewed safe-context body, after you acknowledge the warnings and click (a test restricts network use to `src/app/analyze.ts`).
 - A TypeScript port of the scanner for that app, verified against the Python reference scanner with golden fixtures.
 - A local CSV scanner (Python, standard library only) that profiles a dataset and flags likely PII, credentials, IP addresses, identifiers, and token-like values, including inside free text, and produces a machine-readable AI-analysis readiness report.
 - A deterministic safe-context step (TypeScript) that turns a scan report into a minimized `safe-context/1` payload: no cell values, no samples, no filename, and no names of withheld columns.
@@ -24,7 +24,6 @@ MVP in development. The server-side Claude call is implemented and unit-tested w
 **Planned, not built**
 
 - A deployed gateway, authentication, and a shared rate-limit store.
-- Browser UI for the analysis result (the app's section 3 is still disabled; client code is tested to make no network requests).
 - Controlled SQL/Python tools and adaptive learning mode.
 
 The scanner runs locally and does not send the dataset to an external service. Detection is heuristic and can produce false positives and false negatives. The included sample dataset is synthetic. This repository contains the Python reference scanner, the browser demo, the safe-context and gateway code, documentation, and specifications. The marketing page is on the website below.
@@ -61,6 +60,7 @@ ANTHROPIC_API_KEY=... npm run demo:analyze # one real Claude call on the safe co
 ```bash
 npm install
 npm run dev        # local dev server; choose a CSV or use the synthetic sample
+ANTHROPIC_API_KEY=... npm run dev   # same, with live Claude analysis in step 3 (key stays server-side)
 npm run build
 ```
 
@@ -68,7 +68,7 @@ Run the tests (Node 24+):
 
 ```bash
 (cd poc && python3 -m unittest test_scanner_hardening test_eval)
-npm test           # 62 TypeScript tests, no installs needed
+npm test           # 66 TypeScript tests, no installs needed
 npm run typecheck  # needs npm install
 ```
 
