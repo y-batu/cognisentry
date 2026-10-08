@@ -32,7 +32,7 @@ npm run dev
 ```
 
 1. Choose a CSV (or use the built-in synthetic sample). The file is parsed and scanned in the browser.
-2. Review the findings per column.
+2. Review the findings per column, plus data-quality findings (duplicates, high missing rate, constant or identifier-like columns).
 3. Preview the exact `safe-context/1` request: no cell values, no samples, no filename, no names of withheld columns. The previewed string is byte-for-byte what would be sent, with its SHA-256 and an acknowledgement gate.
 
 > Screenshots: run `npm run dev` and capture the three steps above into `docs/screenshots/` (not committed yet).
@@ -40,6 +40,6 @@ npm run dev
 ## 3. Verify
 
 ```bash
-npm test                                                    # 45 TypeScript tests
+npm test                                                    # 52 TypeScript tests
 (cd poc && python3 -m unittest test_scanner_hardening test_eval)   # 42 Python tests
 ```

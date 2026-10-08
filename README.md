@@ -15,6 +15,7 @@ MVP in development. Nothing here calls a model yet.
 - A local CSV scanner (Python, standard library only) that profiles a dataset and flags likely PII, credentials, IP addresses, identifiers, and token-like values, including inside free text, and produces a machine-readable AI-analysis readiness report.
 - A deterministic safe-context step (TypeScript) that turns a scan report into a minimized `safe-context/1` payload: no cell values, no samples, no filename, and no names of withheld columns.
 - An exact-payload request builder with SHA-256, acknowledgement gating, and a React preview component. The previewed string is the string that would be sent.
+- Deterministic data-quality findings (duplicates, high missing rates, constant and identifier-like columns) derived from profile statistics only, shown in the browser app (`src/scanner/quality.ts`).
 - A strict server-side request validator and a **mock** gateway handler (validation, error codes, rate limiting). It returns a receipt and calls no model.
 - A synthetic evaluation harness that measures the scanner and reports its misses and false positives ([`docs/EVALUATION.md`](docs/EVALUATION.md)).
 - Tests for all of the above (`poc/` Python tests, `src/safeContext/` Node tests).
@@ -59,7 +60,7 @@ Run the tests (Node 24+):
 
 ```bash
 (cd poc && python3 -m unittest test_scanner_hardening test_eval)
-npm test           # TypeScript tests need no installs
+npm test           # 52 TypeScript tests, no installs needed
 npm run typecheck  # needs npm install
 ```
 

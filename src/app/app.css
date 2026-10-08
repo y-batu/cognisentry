@@ -43,3 +43,9 @@ th { color: var(--muted); font-weight: 600; white-space: nowrap; }
 .cognisentry-safe-context code { word-break: break-all; font-size: 12px; }
 .claude { border-top: 1px solid var(--line); margin-top: 32px; }
 @media (max-width: 520px) { .stats .wide { grid-column: auto; } }
+
+.quality { list-style: none; padding: 0; margin: 0.5rem 0 1rem; }
+.quality li { padding: 0.25rem 0; }
+.sev { display: inline-block; min-width: 3.5rem; text-align: center; padding: 0 0.4rem; border-radius: 4px; font-size: 0.75rem; text-transform: uppercase; background: #e5e7eb; color: #111827; }
+.sev-high { background: #fecaca; }
+.sev-medium { background: #fde68a; }

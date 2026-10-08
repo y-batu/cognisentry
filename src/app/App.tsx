@@ -3,6 +3,7 @@ import type { DragEvent } from 'react'
 import { SafeContextPreview } from '../components/SafeContextPreview.tsx'
 import { validateSafeContextRequest } from '../safeContext/index.ts'
 import type { SafeContextRequest } from '../safeContext/index.ts'
+import { findQualityIssues } from '../scanner/quality.ts'
 import { scanCsvText } from '../scanner/scanner.ts'
 import sampleCsv from '../../poc/sample_customer_activity.csv?raw'
 
@@ -49,6 +50,7 @@ export function App() {
     void handleFile(e.dataTransfer.files[0])
   }
 
+  const quality = report ? findQualityIssues(report) : []
   const validation = request?.ready ? validateSafeContextRequest(request.body) : null
 
   return (
@@ -108,6 +110,16 @@ export function App() {
                 </tbody>
               </table>
             </div>
+            {quality.length > 0 && (
+              <>
+                <h3>Data-quality findings</h3>
+                <ul className="quality">
+                  {quality.map((q, i) => (
+                    <li key={i}><span className={`sev sev-${q.severity}`}>{q.severity}</span> {q.message}</li>
+                  ))}
+                </ul>
+              </>
+            )}
             <p className="note">Automated, heuristic detection. It can miss sensitive data and flag harmless data. Not a guarantee or a compliance check. No cell values are shown or stored.</p>
           </section>
 

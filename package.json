@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "tsc -p tsconfig.web.json && vite build",
     "preview": "vite preview",
-    "test": "node --test src/safeContext/prepareSafeContext.test.ts src/safeContext/gateway.test.ts src/scanner/scanner.test.ts src/app/app.test.ts",
+    "test": "node --test src/safeContext/prepareSafeContext.test.ts src/safeContext/gateway.test.ts src/scanner/scanner.test.ts src/scanner/quality.test.ts src/app/app.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.web.json"
   },
   "dependencies": {
