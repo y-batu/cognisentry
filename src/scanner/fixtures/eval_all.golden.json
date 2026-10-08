@@ -1,0 +1,507 @@
+{
+  "product": "Cognisentry AI",
+  "scanner": "Local CSV Security & Data Quality Scanner PoC",
+  "privacy": {
+    "processing": "local",
+    "uploaded": false,
+    "note": "This script reads the CSV locally and does not send it to any external service."
+  },
+  "dataset": {
+    "filename": "eval_all.csv",
+    "rows": 40,
+    "columns": 28,
+    "duplicate_rows": 0
+  },
+  "ai_analysis_readiness": "Sensitive data detected",
+  "flagged_fields": [
+    {
+      "name": "c01",
+      "classification": "PII",
+      "reasons": [
+        "values resemble email addresses"
+      ]
+    },
+    {
+      "name": "c02",
+      "classification": "PII",
+      "reasons": [
+        "values resemble phone numbers",
+        "free text contains phone numbers in 40 cell(s)"
+      ]
+    },
+    {
+      "name": "c03",
+      "classification": "PII",
+      "reasons": [
+        "values resemble phone numbers",
+        "free text contains phone numbers in 40 cell(s)"
+      ]
+    },
+    {
+      "name": "c05",
+      "classification": "Potentially Sensitive",
+      "reasons": [
+        "values resemble IPv4 addresses"
+      ]
+    },
+    {
+      "name": "c06",
+      "classification": "Secret / High Risk",
+      "reasons": [
+        "values contain known secret/token formats"
+      ]
+    },
+    {
+      "name": "c07",
+      "classification": "Secret / High Risk",
+      "reasons": [
+        "values contain known secret/token formats"
+      ]
+    },
+    {
+      "name": "c08",
+      "classification": "Secret / High Risk",
+      "reasons": [
+        "values contain known secret/token formats"
+      ]
+    },
+    {
+      "name": "c09",
+      "classification": "Secret / High Risk",
+      "reasons": [
+        "values contain known secret/token formats"
+      ]
+    },
+    {
+      "name": "c10",
+      "classification": "Secret / High Risk",
+      "reasons": [
+        "values contain known secret/token formats"
+      ]
+    },
+    {
+      "name": "c11",
+      "classification": "Secret / High Risk",
+      "reasons": [
+        "values contain known secret/token formats"
+      ]
+    },
+    {
+      "name": "c13",
+      "classification": "PII",
+      "reasons": [
+        "free text contains email addresses in 40 cell(s)"
+      ]
+    },
+    {
+      "name": "c14",
+      "classification": "PII",
+      "reasons": [
+        "free text contains phone numbers in 40 cell(s)"
+      ]
+    },
+    {
+      "name": "c15",
+      "classification": "Secret / High Risk",
+      "reasons": [
+        "values contain known secret/token formats"
+      ]
+    },
+    {
+      "name": "c24",
+      "classification": "Potentially Sensitive",
+      "reasons": [
+        "values resemble IPv4 addresses"
+      ]
+    }
+  ],
+  "column_profiles": [
+    {
+      "name": "c01",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 39,
+      "classification": "PII",
+      "reasons": [
+        "values resemble email addresses"
+      ]
+    },
+    {
+      "name": "c02",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "PII",
+      "reasons": [
+        "values resemble phone numbers",
+        "free text contains phone numbers in 40 cell(s)"
+      ],
+      "free_text": true,
+      "free_text_inspection": {
+        "cells_inspected": 40,
+        "findings": {
+          "email": 0,
+          "phone": 40,
+          "secret": 0,
+          "instruction_like": 0
+        }
+      },
+      "review_recommended": true
+    },
+    {
+      "name": "c03",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "PII",
+      "reasons": [
+        "values resemble phone numbers",
+        "free text contains phone numbers in 40 cell(s)"
+      ],
+      "free_text": true,
+      "free_text_inspection": {
+        "cells_inspected": 40,
+        "findings": {
+          "email": 0,
+          "phone": 40,
+          "secret": 0,
+          "instruction_like": 0
+        }
+      },
+      "review_recommended": true
+    },
+    {
+      "name": "c04",
+      "type": "number",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Standard",
+      "reasons": [],
+      "numeric": {
+        "min": 2339002006.0,
+        "max": 9776940767.0,
+        "average": 5647314079.875
+      }
+    },
+    {
+      "name": "c05",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Potentially Sensitive",
+      "reasons": [
+        "values resemble IPv4 addresses"
+      ]
+    },
+    {
+      "name": "c06",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Secret / High Risk",
+      "reasons": [
+        "values contain known secret/token formats"
+      ]
+    },
+    {
+      "name": "c07",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Secret / High Risk",
+      "reasons": [
+        "values contain known secret/token formats"
+      ]
+    },
+    {
+      "name": "c08",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Secret / High Risk",
+      "reasons": [
+        "values contain known secret/token formats"
+      ]
+    },
+    {
+      "name": "c09",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Secret / High Risk",
+      "reasons": [
+        "values contain known secret/token formats"
+      ]
+    },
+    {
+      "name": "c10",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Secret / High Risk",
+      "reasons": [
+        "values contain known secret/token formats"
+      ]
+    },
+    {
+      "name": "c11",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 1,
+      "classification": "Secret / High Risk",
+      "reasons": [
+        "values contain known secret/token formats"
+      ],
+      "free_text": true,
+      "free_text_inspection": {
+        "cells_inspected": 40,
+        "findings": {
+          "email": 0,
+          "phone": 0,
+          "secret": 40,
+          "instruction_like": 0
+        }
+      },
+      "review_recommended": true
+    },
+    {
+      "name": "c12",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Standard",
+      "reasons": []
+    },
+    {
+      "name": "c13",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 29,
+      "classification": "PII",
+      "reasons": [
+        "free text contains email addresses in 40 cell(s)"
+      ],
+      "free_text": true,
+      "free_text_inspection": {
+        "cells_inspected": 40,
+        "findings": {
+          "email": 40,
+          "phone": 0,
+          "secret": 0,
+          "instruction_like": 0
+        }
+      },
+      "review_recommended": true
+    },
+    {
+      "name": "c14",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "PII",
+      "reasons": [
+        "free text contains phone numbers in 40 cell(s)"
+      ],
+      "free_text": true,
+      "free_text_inspection": {
+        "cells_inspected": 40,
+        "findings": {
+          "email": 0,
+          "phone": 40,
+          "secret": 0,
+          "instruction_like": 0
+        }
+      },
+      "review_recommended": true
+    },
+    {
+      "name": "c15",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Secret / High Risk",
+      "reasons": [
+        "values contain known secret/token formats"
+      ],
+      "free_text": true,
+      "free_text_inspection": {
+        "cells_inspected": 40,
+        "findings": {
+          "email": 0,
+          "phone": 0,
+          "secret": 40,
+          "instruction_like": 0
+        }
+      },
+      "review_recommended": true
+    },
+    {
+      "name": "c16",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Standard",
+      "reasons": []
+    },
+    {
+      "name": "c17",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Standard",
+      "reasons": []
+    },
+    {
+      "name": "c18",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Standard",
+      "reasons": []
+    },
+    {
+      "name": "c19",
+      "type": "number",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Standard",
+      "reasons": [],
+      "numeric": {
+        "min": 14.29,
+        "max": 998.57,
+        "average": 495.4048
+      }
+    },
+    {
+      "name": "c20",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 38,
+      "classification": "Standard",
+      "reasons": []
+    },
+    {
+      "name": "c21",
+      "type": "number",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Standard",
+      "reasons": [],
+      "numeric": {
+        "min": 1604190233.0,
+        "max": 1784980223.0,
+        "average": 1700958909.7
+      }
+    },
+    {
+      "name": "c22",
+      "type": "number",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Standard",
+      "reasons": [],
+      "numeric": {
+        "min": 18945.0,
+        "max": 98075.0,
+        "average": 60137.4
+      }
+    },
+    {
+      "name": "c23",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Standard",
+      "reasons": []
+    },
+    {
+      "name": "c24",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Potentially Sensitive",
+      "reasons": [
+        "values resemble IPv4 addresses"
+      ]
+    },
+    {
+      "name": "c25",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Standard",
+      "reasons": []
+    },
+    {
+      "name": "c26",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 40,
+      "classification": "Standard",
+      "reasons": [
+        "values resemble URLs"
+      ]
+    },
+    {
+      "name": "c27",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 4,
+      "classification": "Standard",
+      "reasons": []
+    },
+    {
+      "name": "c28",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 6,
+      "classification": "Standard",
+      "reasons": [],
+      "free_text": true,
+      "free_text_inspection": {
+        "cells_inspected": 40,
+        "findings": {
+          "email": 0,
+          "phone": 0,
+          "secret": 0,
+          "instruction_like": 0
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Heuristic detection can produce false positives and false negatives.",
+    "This PoC does not provide compliance certification or a security guarantee.",
+    "No Claude API call is made by this scanner.",
+    "Free-text inspection covers at most the first 1000 non-empty values per column.",
+    "Instruction-like text detection is a warning signal only, not a security boundary."
+  ]
+}

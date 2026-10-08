@@ -1,0 +1,3 @@
+customerId,firstName,isMobile,token_count,SSN,API_KEY,userID,shippingAddress,ip,plan
+c-1,Ada,yes,3,000-00-0000,x,u1,1 Test St,192.0.2.1,Pro
+c-2,Bob,no,4,000-00-0001,y,u2,2 Test St,192.0.2.2,Basic

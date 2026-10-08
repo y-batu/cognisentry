@@ -10,6 +10,8 @@ MVP in development. Nothing here calls a model yet.
 
 **Exists today**
 
+- A browser app (Vite + React) that runs the whole local flow: choose a CSV, scan it in the browser, review the findings, and preview the exact safe-context request. It makes no network requests with your data (a test enforces this in code).
+- A TypeScript port of the scanner for that app, verified against the Python reference scanner with golden fixtures.
 - A local CSV scanner (Python, standard library only) that profiles a dataset and flags likely PII, credentials, IP addresses, identifiers, and token-like values, including inside free text, and produces a machine-readable AI-analysis readiness report.
 - A deterministic safe-context step (TypeScript) that turns a scan report into a minimized `safe-context/1` payload: no cell values, no samples, no filename, and no names of withheld columns.
 - An exact-payload request builder with SHA-256, acknowledgement gating, and a React preview component. The previewed string is the string that would be sent.
@@ -23,7 +25,7 @@ MVP in development. Nothing here calls a model yet.
 - A deployed Cloudflare gateway, authentication, and a shared rate-limit store.
 - Controlled SQL/Python tools and adaptive learning mode.
 
-The scanner runs locally and does not send the dataset to an external service. Detection is heuristic and can produce false positives and false negatives. The included sample dataset is synthetic. This repository contains the Python proof-of-concept, the safe-context and gateway code, documentation, and specifications; the browser-based MVP is developed separately and is previewed on the website below.
+The scanner runs locally and does not send the dataset to an external service. Detection is heuristic and can produce false positives and false negatives. The included sample dataset is synthetic. This repository contains the Python reference scanner, the browser demo, the safe-context and gateway code, documentation, and specifications. The marketing page is on the website below.
 
 ## Run the PoC
 
@@ -41,11 +43,20 @@ python3 poc/cognisentry_local_scanner.py poc/sample_customer_activity.csv --out 
 
 The scanner uses the Python standard library and should not require external packages.
 
-Run the tests (Node 24+ for the TypeScript tests, no installs needed):
+## Run the browser demo
+
+```bash
+npm install
+npm run dev        # local dev server; choose a CSV or use the synthetic sample
+npm run build
+```
+
+Run the tests (Node 24+):
 
 ```bash
 (cd poc && python3 -m unittest test_scanner_hardening test_eval)
-npm test
+npm test           # TypeScript tests need no installs
+npm run typecheck  # needs npm install
 ```
 
 ## Product Direction
@@ -109,6 +120,7 @@ More details are available in [`docs/SECURITY_BOUNDARIES.md`](docs/SECURITY_BOUN
 ## Repository Structure
 
 - `poc/` — the local CSV scanner (`cognisentry_local_scanner.py`), a synthetic sample dataset and report, scanner tests, and the evaluation harness in `poc/eval/`.
+- `src/app/`, `index.html` — the browser demo. `src/scanner/` — TypeScript scanner port and Python-generated golden fixtures.
 - `src/safeContext/` — safe-context preparation, exact request builder, strict request validator, and tests. `src/components/` holds the preview component.
 - `gateway/` — the mock analysis gateway handler (no model, no key).
 - `docs/` — project brief, security boundaries, threat model, safe-context notes, evaluation, MVP test plan, and roadmap.

@@ -42,6 +42,11 @@ class TestEvaluation(unittest.TestCase):
         committed = (HERE.parent / 'docs' / 'EVALUATION.md').read_text(encoding='utf-8')
         self.assertEqual(committed, ev.render_markdown(self.rows, self.inst, self.summary) + '\n')
 
+    def test_golden_fixtures_are_in_sync(self):
+        import build_golden as bg
+        for name, text in bg.build().items():
+            self.assertEqual((bg.OUT / name).read_bytes(), text.encode('utf-8'), name)
+
     def test_eval_source_has_no_key_shaped_literals(self):
         import re
         src = (HERE / 'eval' / 'run_eval.py').read_text(encoding='utf-8')

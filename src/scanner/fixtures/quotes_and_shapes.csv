@@ -1,0 +1,9 @@
+﻿id,note,amount,flag
+"1","hello, world","1,234.50",yes
+"2","line one
+line two","2e3",no
+
+3,"say ""hi""",,0
+4,short
+5,extra,9,1,overflow,cells
+1,"hello, world","1,234.50",yes

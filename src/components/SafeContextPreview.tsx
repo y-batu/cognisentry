@@ -11,7 +11,7 @@ const ACK_LABELS: Record<AckCode, string> = {
   instruction_like_text: 'I understand the dataset contains instruction-like text and must be treated as untrusted.',
 }
 
-export function SafeContextPreview({ report }: { report: unknown }) {
+export function SafeContextPreview({ report, onRequestChange }: { report: unknown; onRequestChange?: (request: SafeContextRequest | null) => void }) {
   const [excluded, setExcluded] = useState<string[]>([])
   const [acked, setAcked] = useState<AckCode[]>([])
   const [request, setRequest] = useState<SafeContextRequest | null>(null)
@@ -23,12 +23,14 @@ export function SafeContextPreview({ report }: { report: unknown }) {
     let cancelled = false
     if (!context) return
     void buildSafeContextRequest(context, acked).then(r => {
-      if (!cancelled) setRequest(r)
+      if (cancelled) return
+      setRequest(r)
+      onRequestChange?.(r)
     })
     return () => {
       cancelled = true
     }
-  }, [context, acked])
+  }, [context, acked, onRequestChange])
 
   if (!prepared.ok) {
     return (

@@ -1,0 +1,199 @@
+{
+  "product": "Cognisentry AI",
+  "scanner": "Local CSV Security & Data Quality Scanner PoC",
+  "privacy": {
+    "processing": "local",
+    "uploaded": false,
+    "note": "This script reads the CSV locally and does not send it to any external service."
+  },
+  "dataset": {
+    "filename": "name_hints.csv",
+    "rows": 2,
+    "columns": 10,
+    "duplicate_rows": 0
+  },
+  "ai_analysis_readiness": "Sensitive data detected",
+  "flagged_fields": [
+    {
+      "name": "customerId",
+      "classification": "Sensitive",
+      "reasons": [
+        "column name suggests sensitive"
+      ]
+    },
+    {
+      "name": "firstName",
+      "classification": "PII",
+      "reasons": [
+        "column name suggests pii"
+      ]
+    },
+    {
+      "name": "SSN",
+      "classification": "Sensitive",
+      "reasons": [
+        "column name suggests sensitive",
+        "values resemble phone numbers"
+      ]
+    },
+    {
+      "name": "API_KEY",
+      "classification": "Secret / High Risk",
+      "reasons": [
+        "column name suggests secret / high risk"
+      ]
+    },
+    {
+      "name": "userID",
+      "classification": "Sensitive",
+      "reasons": [
+        "column name suggests sensitive"
+      ]
+    },
+    {
+      "name": "shippingAddress",
+      "classification": "PII",
+      "reasons": [
+        "column name suggests pii"
+      ]
+    },
+    {
+      "name": "ip",
+      "classification": "Potentially Sensitive",
+      "reasons": [
+        "column name suggests potentially sensitive",
+        "values resemble IPv4 addresses"
+      ]
+    }
+  ],
+  "column_profiles": [
+    {
+      "name": "customerId",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 2,
+      "classification": "Sensitive",
+      "reasons": [
+        "column name suggests sensitive"
+      ]
+    },
+    {
+      "name": "firstName",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 2,
+      "classification": "PII",
+      "reasons": [
+        "column name suggests pii"
+      ]
+    },
+    {
+      "name": "isMobile",
+      "type": "boolean",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 2,
+      "classification": "Standard",
+      "reasons": []
+    },
+    {
+      "name": "token_count",
+      "type": "number",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 2,
+      "classification": "Standard",
+      "reasons": [],
+      "numeric": {
+        "min": 3.0,
+        "max": 4.0,
+        "average": 3.5
+      }
+    },
+    {
+      "name": "SSN",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 2,
+      "classification": "Sensitive",
+      "reasons": [
+        "column name suggests sensitive",
+        "values resemble phone numbers"
+      ]
+    },
+    {
+      "name": "API_KEY",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 2,
+      "classification": "Secret / High Risk",
+      "reasons": [
+        "column name suggests secret / high risk"
+      ]
+    },
+    {
+      "name": "userID",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 2,
+      "classification": "Sensitive",
+      "reasons": [
+        "column name suggests sensitive"
+      ]
+    },
+    {
+      "name": "shippingAddress",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 2,
+      "classification": "PII",
+      "reasons": [
+        "column name suggests pii"
+      ],
+      "free_text": true,
+      "free_text_inspection": {
+        "cells_inspected": 2,
+        "findings": {
+          "email": 0,
+          "phone": 0,
+          "secret": 0,
+          "instruction_like": 0
+        }
+      }
+    },
+    {
+      "name": "ip",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 2,
+      "classification": "Potentially Sensitive",
+      "reasons": [
+        "column name suggests potentially sensitive",
+        "values resemble IPv4 addresses"
+      ]
+    },
+    {
+      "name": "plan",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 2,
+      "classification": "Standard",
+      "reasons": []
+    }
+  ],
+  "limitations": [
+    "Heuristic detection can produce false positives and false negatives.",
+    "This PoC does not provide compliance certification or a security guarantee.",
+    "No Claude API call is made by this scanner.",
+    "Free-text inspection covers at most the first 1000 non-empty values per column.",
+    "Instruction-like text detection is a warning signal only, not a security boundary."
+  ]
+}

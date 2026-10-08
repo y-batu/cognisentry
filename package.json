@@ -3,9 +3,24 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "Deterministic safe-context preparation for Cognisentry AI. No runtime dependencies.",
+  "description": "Cognisentry AI: local dataset scan, safe-context preparation, and a mock analysis gateway.",
   "scripts": {
-    "test": "node --test src/safeContext/prepareSafeContext.test.ts src/safeContext/gateway.test.ts",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "dev": "vite",
+    "build": "tsc -p tsconfig.web.json && vite build",
+    "preview": "vite preview",
+    "test": "node --test src/safeContext/prepareSafeContext.test.ts src/safeContext/gateway.test.ts src/scanner/scanner.test.ts src/app/app.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.web.json"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0"
   }
 }

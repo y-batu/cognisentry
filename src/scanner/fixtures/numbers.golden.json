@@ -1,0 +1,77 @@
+{
+  "product": "Cognisentry AI",
+  "scanner": "Local CSV Security & Data Quality Scanner PoC",
+  "privacy": {
+    "processing": "local",
+    "uploaded": false,
+    "note": "This script reads the CSV locally and does not send it to any external service."
+  },
+  "dataset": {
+    "filename": "numbers.csv",
+    "rows": 4,
+    "columns": 4,
+    "duplicate_rows": 0
+  },
+  "ai_analysis_readiness": "No findings (heuristic)",
+  "flagged_fields": [],
+  "column_profiles": [
+    {
+      "name": "a",
+      "type": "number",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 4,
+      "classification": "Standard",
+      "reasons": [],
+      "numeric": {
+        "min": 1.0,
+        "max": 4.0,
+        "average": 2.5
+      }
+    },
+    {
+      "name": "b",
+      "type": "number",
+      "missing_count": 1,
+      "missing_percent": 25.0,
+      "unique_count": 3,
+      "classification": "Standard",
+      "reasons": [],
+      "numeric": {
+        "min": -400.0,
+        "max": 10.5,
+        "average": -129.6667
+      }
+    },
+    {
+      "name": "c",
+      "type": "number",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 4,
+      "classification": "Standard",
+      "reasons": [],
+      "numeric": {
+        "min": 3.0,
+        "max": 2500.0,
+        "average": 876.75
+      }
+    },
+    {
+      "name": "d",
+      "type": "boolean",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 4,
+      "classification": "Standard",
+      "reasons": []
+    }
+  ],
+  "limitations": [
+    "Heuristic detection can produce false positives and false negatives.",
+    "This PoC does not provide compliance certification or a security guarantee.",
+    "No Claude API call is made by this scanner.",
+    "Free-text inspection covers at most the first 1000 non-empty values per column.",
+    "Instruction-like text detection is a warning signal only, not a security boundary."
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "product": "Cognisentry AI",
+  "scanner": "Local CSV Security & Data Quality Scanner PoC",
+  "privacy": {
+    "processing": "local",
+    "uploaded": false,
+    "note": "This script reads the CSV locally and does not send it to any external service."
+  },
+  "dataset": {
+    "filename": "quotes_and_shapes.csv",
+    "rows": 6,
+    "columns": 4,
+    "duplicate_rows": 1
+  },
+  "ai_analysis_readiness": "No findings (heuristic)",
+  "flagged_fields": [],
+  "column_profiles": [
+    {
+      "name": "id",
+      "type": "number",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 5,
+      "classification": "Standard",
+      "reasons": [],
+      "numeric": {
+        "min": 1.0,
+        "max": 5.0,
+        "average": 2.6667
+      }
+    },
+    {
+      "name": "note",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0.0,
+      "unique_count": 5,
+      "classification": "Standard",
+      "reasons": [],
+      "free_text": true,
+      "free_text_inspection": {
+        "cells_inspected": 6,
+        "findings": {
+          "email": 0,
+          "phone": 0,
+          "secret": 0,
+          "instruction_like": 0
+        }
+      }
+    },
+    {
+      "name": "amount",
+      "type": "number",
+      "missing_count": 2,
+      "missing_percent": 33.33,
+      "unique_count": 3,
+      "classification": "Standard",
+      "reasons": [],
+      "numeric": {
+        "min": 9.0,
+        "max": 2000.0,
+        "average": 1119.5
+      }
+    },
+    {
+      "name": "flag",
+      "type": "boolean",
+      "missing_count": 1,
+      "missing_percent": 16.67,
+      "unique_count": 4,
+      "classification": "Standard",
+      "reasons": []
+    }
+  ],
+  "limitations": [
+    "Heuristic detection can produce false positives and false negatives.",
+    "This PoC does not provide compliance certification or a security guarantee.",
+    "No Claude API call is made by this scanner.",
+    "Free-text inspection covers at most the first 1000 non-empty values per column.",
+    "Instruction-like text detection is a warning signal only, not a security boundary."
+  ]
+}
