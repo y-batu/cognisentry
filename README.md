@@ -6,7 +6,7 @@ Cognisentry AI is an early-stage platform designed to help people and teams work
 
 ## Current Status
 
-MVP in development. Nothing here calls a model yet.
+MVP in development. The server-side Claude call is implemented and unit-tested with a fake client; it has not yet been run against the live API, and the browser app does not call it yet.
 
 **Exists today**
 
@@ -16,14 +16,15 @@ MVP in development. Nothing here calls a model yet.
 - A deterministic safe-context step (TypeScript) that turns a scan report into a minimized `safe-context/1` payload: no cell values, no samples, no filename, and no names of withheld columns.
 - An exact-payload request builder with SHA-256, acknowledgement gating, and a React preview component. The previewed string is the string that would be sent.
 - Deterministic data-quality findings (duplicates, high missing rates, constant and identifier-like columns) derived from profile statistics only, shown in the browser app (`src/scanner/quality.ts`).
-- A strict server-side request validator and a **mock** gateway handler (validation, error codes, rate limiting). It returns a receipt and calls no model.
+- A strict server-side request validator and a gateway handler (validation, error codes, rate limiting). Without `ANTHROPIC_API_KEY` it runs in **mock** mode and returns a receipt; with a key it calls Claude (see below).
+- A server-side **Claude analyzer** (`gateway/claudeAnalyzer.ts`): sends only the validated safe context to `claude-opus-5-5` with a JSON-schema structured output, re-validates the reply, and maps refusals, truncation and upstream errors to a generic 502. Deployable as a Cloudflare Pages Function (`functions/api/analyze.ts`).
 - A synthetic evaluation harness that measures the scanner and reports its misses and false positives ([`docs/EVALUATION.md`](docs/EVALUATION.md)).
 - Tests for all of the above (`poc/` Python tests, `src/safeContext/` Node tests).
 
 **Planned, not built**
 
-- A real server-side Claude call, limited to analyzing an approved safe context.
-- A deployed Cloudflare gateway, authentication, and a shared rate-limit store.
+- A deployed gateway, authentication, and a shared rate-limit store.
+- Browser UI for the analysis result (the app's section 3 is still disabled; client code is tested to make no network requests).
 - Controlled SQL/Python tools and adaptive learning mode.
 
 The scanner runs locally and does not send the dataset to an external service. Detection is heuristic and can produce false positives and false negatives. The included sample dataset is synthetic. This repository contains the Python reference scanner, the browser demo, the safe-context and gateway code, documentation, and specifications. The marketing page is on the website below.
@@ -48,6 +49,13 @@ python3 poc/cognisentry_local_scanner.py poc/sample_customer_activity.csv --out 
 
 The scanner uses the Python standard library and should not require external packages.
 
+## Try the Claude analysis
+
+```bash
+npm run demo:analyze                      # mock mode, no key needed
+ANTHROPIC_API_KEY=... npm run demo:analyze # one real Claude call on the safe context
+```
+
 ## Run the browser demo
 
 ```bash
@@ -60,7 +68,7 @@ Run the tests (Node 24+):
 
 ```bash
 (cd poc && python3 -m unittest test_scanner_hardening test_eval)
-npm test           # 52 TypeScript tests, no installs needed
+npm test           # 62 TypeScript tests, no installs needed
 npm run typecheck  # needs npm install
 ```
 
@@ -95,7 +103,7 @@ React/Vite
 → Claude API
 → controlled analytical tools
 
-A production Claude API integration is not live yet. Where Claude is used, why, and the rollout are in [`docs/CLAUDE_INTEGRATION.md`](docs/CLAUDE_INTEGRATION.md).
+The server-side call exists but is not deployed. Where Claude is used, why, and the rollout are in [`docs/CLAUDE_INTEGRATION.md`](docs/CLAUDE_INTEGRATION.md).
 
 ## Architecture
 
@@ -127,7 +135,7 @@ More details are available in [`docs/SECURITY_BOUNDARIES.md`](docs/SECURITY_BOUN
 - `poc/` — the local CSV scanner (`cognisentry_local_scanner.py`), a synthetic sample dataset and report, scanner tests, and the evaluation harness in `poc/eval/`.
 - `src/app/`, `index.html` — the browser demo. `src/scanner/` — TypeScript scanner port and Python-generated golden fixtures.
 - `src/safeContext/` — safe-context preparation, exact request builder, strict request validator, and tests. `src/components/` holds the preview component.
-- `gateway/` — the mock analysis gateway handler (no model, no key).
+- `gateway/` — the analysis gateway handler (mock by default) and the Claude analyzer. `functions/` — the Pages Function entry point. `scripts/` — the end-to-end demo.
 - `docs/` — project brief, security boundaries, threat model, safe-context notes, evaluation, MVP test plan, and roadmap.
 - `specs/` — draft Claude tool contracts (not implemented) and the JSON Schema for the safe-context request.
 

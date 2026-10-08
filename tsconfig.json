@@ -14,6 +14,6 @@
     "noUncheckedIndexedAccess": true,
     "resolveJsonModule": true
   },
-  "include": ["src/safeContext", "src/scanner", "gateway"],
+  "include": ["src/safeContext", "src/scanner", "gateway", "functions"],
   "exclude": ["src/components"]
 }

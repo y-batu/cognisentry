@@ -1,9 +1,8 @@
-// Mock analysis gateway, written against web-standard Request/Response so the same
+// Analysis gateway, written against web-standard Request/Response so the same
 // handler can later run as a Cloudflare Pages Function / Worker.
 //
-// What it does today: validates a safe-context request and answers with a receipt.
-// What it does NOT do: call any model, hold any API key, or make any outbound request.
-// The Analyzer hook is the single place a future server-side Claude call would attach.
+// Without an analyzer it validates and answers with a receipt (mock mode); with one it returns the analysis.
+// The Analyzer hook is the single place a server-side model call attaches (see claudeAnalyzer.ts).
 
 import { validateSafeContextRequest } from '../src/safeContext/validateRequest.ts'
 import { sha256Hex } from '../src/safeContext/request.ts'

@@ -37,9 +37,18 @@ npm run dev
 
 > Screenshots: run `npm run dev` and capture the three steps above into `docs/screenshots/` (not committed yet).
 
-## 3. Verify
+## 3. Gateway and Claude analysis
 
 ```bash
-npm test                                                    # 52 TypeScript tests
+npm run demo:analyze                       # mock: validates the request, returns a receipt
+ANTHROPIC_API_KEY=... npm run demo:analyze  # live: one Claude call, structured analysis returned
+```
+
+The request sent to Claude is the exact safe-context payload from step 2. A live run returns `summary`, `data_quality_notes`, `suggested_questions` and `limitations`.
+
+## 4. Verify
+
+```bash
+npm test                                                    # 62 TypeScript tests
 (cd poc && python3 -m unittest test_scanner_hardening test_eval)   # 42 Python tests
 ```

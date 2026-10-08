@@ -1,6 +1,6 @@
 # Claude Integration Plan
 
-Status: **planned, not built.** Nothing in this repository calls the Claude API today. The gateway handler is a mock that returns a receipt.
+Status: **first workflow implemented server-side, not yet exercised against the live API.** `gateway/claudeAnalyzer.ts` calls Claude through the official TypeScript SDK; its tests use a fake client. Without `ANTHROPIC_API_KEY` the gateway stays in mock mode. The browser app does not call it yet, and nothing is deployed.
 
 ## Why Claude
 
@@ -32,7 +32,7 @@ Structured output -> validated -> shown with an audit receipt
 
 ## Rollout
 
-1. **First workflow (narrow):** safe schema in, structured data-quality explanation and suggested analysis questions out. Replace the mock handler with one Messages API call using structured outputs.
+1. **First workflow (narrow) — implemented:** safe schema in; `summary`, data-quality notes, suggested questions and limitations out. One Messages API call to `claude-opus-5-5` with `output_config.format` (JSON schema), medium effort, no forced tool use. The reply is re-validated locally; refusal, truncation or upstream errors become a generic 502 that never echoes error text. Next: run it live, then wire the result into the app (which needs a deliberate change to the no-network test).
 2. **Controlled tools:** read-only SQL over a local copy, results returned as aggregates; Python isolation later.
 3. **Learning mode:** exercise generation and answer evaluation.
 
