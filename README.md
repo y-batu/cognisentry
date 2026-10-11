@@ -45,6 +45,7 @@ The marketing website is separate from this repository's browser MVP and is unch
 
 ```bash
 (cd poc && python3 -m unittest -v test_scanner_hardening test_eval)
+python3 poc/build_golden.py --check
 npm test
 npm run typecheck
 npm run build
@@ -60,6 +61,8 @@ npm run test:e2e
 ```
 
 The browser suite builds the app and starts its own local preview on port 4174. It exercises desktop Chromium and an emulated Pixel 7 viewport; this is not physical-device coverage. Linux browser dependency installation may require administrator access. Test traces and reports are ignored by Git.
+
+`python3 poc/build_golden.py --check` compares the committed CSV fixtures and reports without changing them. To regenerate them intentionally after reviewing a scanner change, run `python3 poc/build_golden.py` without `--check`.
 
 `npm test` explicitly imports all suites through a local TypeScript loader and runs assertions with `node:test`. Type checking is a separate required check.
 

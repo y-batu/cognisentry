@@ -7,7 +7,7 @@ The TypeScript port (src/scanner) must reproduce these reports exactly.
     python3 poc/build_golden.py --check    # exit 1 if committed files are stale
 """
 from __future__ import annotations
-import argparse, json, random, sys
+import argparse, json, random, sys, tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -46,27 +46,28 @@ FIXTURES = {
 }
 
 def build():
-    OUT.mkdir(parents=True, exist_ok=True)
+    """Compute expected contents without touching the committed fixtures."""
     files = {}
-    for name, text in FIXTURES.items():
-        marked = mark_secrets(text)
-        files[name] = marked
-        p = OUT / name
-        p.write_bytes(text.encode('utf-8'))  # unmarked, scanned below
-        report = sc.scan_csv(p)
-        p.write_bytes(marked.encode('utf-8'))
-        files[name.replace('.csv', '.golden.json')] = json.dumps(report, indent=2, ensure_ascii=False, allow_nan=False) + '\n'
+    # The scanner needs a path. Keep raw synthetic secrets and intermediate
+    # files outside the repository, including when scanning raises an error.
+    with tempfile.TemporaryDirectory(prefix='cognisentry-golden-') as tmp:
+        for name, text in FIXTURES.items():
+            files[name] = mark_secrets(text)
+            p = Path(tmp) / name
+            p.write_bytes(text.encode('utf-8'))
+            report = sc.scan_csv(p)
+            files[name.replace('.csv', '.golden.json')] = json.dumps(report, indent=2, ensure_ascii=False, allow_nan=False) + '\n'
     return files
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--check', action='store_true')
     a = ap.parse_args()
-    OUT.mkdir(parents=True, exist_ok=True)
     files = build()
     if a.check:
         stale = [n for n, t in files.items() if not (OUT / n).exists() or (OUT / n).read_bytes() != t.encode('utf-8')]
         if stale: print('stale:', ', '.join(stale)); sys.exit(1)
         print('fixtures up to date'); return
+    OUT.mkdir(parents=True, exist_ok=True)
     for n, t in files.items():
         (OUT / n).write_bytes(t.encode('utf-8'))
     print(f'Wrote {len(files)} files to {OUT}')
