@@ -111,6 +111,37 @@ const addReason = (reasons: string[], msg: string) => {
 // Python rounds via the exact binary value; toFixed does the same for the cases we hit.
 const round = (x: number, d: number) => Number(x.toFixed(d))
 
+// Avoid argument-count limits for tall CSVs and sum overflow for finite inputs.
+function numericStats(nums: number[]): { min: number; max: number; average: number } {
+  let min = nums[0]!
+  let max = nums[0]!
+  let total = 0
+  for (const n of nums) {
+    if (n < min) min = n
+    if (n > max) max = n
+    total += n
+  }
+  if (Number.isFinite(total)) return { min, max, average: round(Math.max(min, Math.min(max, total / nums.length)), 4) }
+
+  const scale = Math.max(Math.abs(min), Math.abs(max))
+  if (scale === 0) return { min, max, average: 0 }
+
+  // Scaled Neumaier summation keeps the sum bounded by the row count and
+  // retains small contributions when large positive/negative values cancel.
+  let sum = 0
+  let correction = 0
+  for (const n of nums) {
+    const value = n / scale
+    const next = sum + value
+    correction += Math.abs(sum) >= Math.abs(value) ? (sum - next) + value : (value - next) + sum
+    sum = next
+  }
+  // Floating-point rounding must not push the scaled mean outside [-1, 1].
+  const scaledMean = Math.max(-1, Math.min(1, (sum + correction) / nums.length))
+  const average = Math.max(min, Math.min(max, scaledMean * scale))
+  return { min, max, average: round(average, 4) }
+}
+
 function classifyColumn(name: string, values: string[]): { classification: Cls; reasons: string[] } {
   const tokens = nameTokens(name)
   let classification: Cls = 'Standard'
@@ -245,7 +276,7 @@ export function scanCsvText(text: string, filename: string) {
       if (classification !== 'Standard') profile.stats_withheld = `column classified as ${classification}`
       else {
         const nums = values.map(maybeNumber).filter((n): n is number => n !== null)
-        if (nums.length) profile.numeric = { min: Math.min(...nums), max: Math.max(...nums), average: round(nums.reduce((a, b) => a + b, 0) / nums.length, 4) }
+        if (nums.length) profile.numeric = numericStats(nums)
       }
     }
     columns.push(profile)

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 
 import { parseCsv } from './csv.ts'
 import { nameTokens, scanCsvText } from './scanner.ts'
+import { prepareSafeContext } from '../safeContext/index.ts'
 
 const fixtures = fileURLToPath(new URL('./fixtures/', import.meta.url))
 const poc = fileURLToPath(new URL('../../poc/', import.meta.url))
@@ -56,4 +57,33 @@ test('name tokenization handles camelCase and separators', () => {
 test('scanner output never contains cell values', () => {
   const r = JSON.stringify(scanCsvText('secret_note,plan\nmy-private-value-123,Pro\n', 'x.csv'))
   assert.ok(!r.includes('my-private-value-123'))
+})
+
+
+test('numeric statistics handle 200,000 rows within the browser upload limit', () => {
+  const text = 'revenue\n' + '1\n'.repeat(199998) + '-3\n5\n'
+  assert.ok(Buffer.byteLength(text) < 10 * 1024 * 1024)
+  const report = scanCsvText(text, 'synthetic.csv')
+  assert.equal(report.dataset.rows, 200000)
+  assert.deepEqual(report.column_profiles[0]!.numeric, { min: -3, max: 5, average: 1 })
+  assert.notEqual(prepareSafeContext(report).status, 'blocked')
+})
+
+test('large finite numbers produce finite statistics and a usable safe context', () => {
+  for (const [values, average] of [
+    [[1e308, 1e308], 1e308],
+    [[-1e308, -1e308], -1e308],
+    [[1e308, 1e308, -1e308, -1e308], 0],
+    [[Number.MAX_VALUE, Number.MAX_VALUE], Number.MAX_VALUE],
+    [[1e308, 1e308, -1e308, -1e308, 1], 0.2],
+    [Array(100).fill(1e300), 1e300],
+    [Array(100).fill(-1e300), -1e300],
+    [[0, 0], 0],
+  ] as Array<[number[], number]>) {
+    const report = scanCsvText('revenue\n' + values.join('\n'), 'synthetic.csv')
+    const numeric = report.column_profiles[0]!.numeric!
+    assert.deepEqual(numeric, { min: Math.min(...values), max: Math.max(...values), average })
+    assert.ok(Object.values(numeric).every(Number.isFinite))
+    assert.notEqual(prepareSafeContext(report).status, 'blocked')
+  }
 })

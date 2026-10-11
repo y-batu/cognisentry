@@ -222,3 +222,23 @@ test('an empty file selection preserves the existing approval', async ({ page })
   await page.locator('input[type=file]').setInputFiles([])
   await expect(page.getByText(approved, { exact: true })).toBeVisible()
 })
+
+
+for (const { name, csv, rows, numeric } of [
+  { name: 'tall numeric CSV', csv: 'revenue\n' + '1\n'.repeat(199998) + '-3\n5\n', rows: 200000, numeric: { min: -3, max: 5, average: 1 } },
+  { name: 'large finite numbers', csv: 'revenue\n1e308\n1e308\n', rows: 2, numeric: { min: 1e308, max: 1e308, average: 1e308 } },
+]) {
+  test(`${name} can be scanned and approved locally`, async ({ page }) => {
+    await upload(page, 'synthetic.csv', csv)
+    await expect(page.getByRole('region', { name: 'Scan result', exact: true })).toBeVisible()
+    await expect(page.getByRole('alert')).toHaveCount(0)
+    await page.getByRole('button', { name: 'Prepare AI context' }).click()
+    await expect(body(page)).toBeVisible()
+    const context = JSON.parse((await body(page).textContent())!).safe_context
+    expect(context.dataset.rows).toBe(rows)
+    expect(context.included_columns[0].numeric).toEqual(numeric)
+    await acknowledge(page)
+    await approveButton(page).click()
+    await expect(page.getByText(approved, { exact: true })).toBeVisible()
+  })
+}
