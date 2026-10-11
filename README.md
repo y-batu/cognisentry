@@ -34,7 +34,7 @@ npm run dev
 
 Choose CSV → local scan → security / quality results → prepare AI context → review exact JSON, withheld counts and warnings → acknowledge → approve payload.
 
-CSV column names must be nonempty (not just whitespace) and unique by exact spelling. Both scanners reject ambiguous headers before producing a report; case-distinct names remain separate. A quoted empty cell counts as a missing value, while a completely blank line is skipped.
+CSV column names must be nonempty (not just whitespace) and unique by exact spelling. Both scanners reject ambiguous headers before producing a report; case-distinct names remain separate. A quoted empty cell counts as a missing value, while a completely blank line is skipped. Rows with more cells than the header are rejected, including extra empty cells. The error identifies the data record (counting from 1, excluding the header and blank lines), not the physical line number. Short rows retain their missing trailing values.
 
 ```bash
 python3 poc/cognisentry_local_scanner.py poc/sample_customer_activity.csv

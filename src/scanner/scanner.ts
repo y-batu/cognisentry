@@ -244,10 +244,12 @@ export function scanCsvText(text: string, filename: string) {
   if (!fields || fields.length === 0) throw new Error('CSV has no header row.')
   if (fields.some(field => !field.trim())) throw new Error('CSV has empty column names. Give every column a name.')
   if (new Set(fields).size !== fields.length) throw new Error('CSV has duplicate column names. Give every column a unique name.')
-  // Python's DictReader: skip blank rows, pad short rows and ignore extra cells.
+  // Match Python's DictReader for blank and short rows; reject excess cells.
   const lastIndex = new Map<string, number>()
   fields.forEach((f, i) => lastIndex.set(f, i))
   const rows = parsed.slice(1).filter(r => r.length > 0)
+  const extraCellRow = rows.findIndex(row => row.length > fields.length)
+  if (extraCellRow !== -1) throw new Error(`CSV data row ${extraCellRow + 1} has more cells than the header. Check delimiters and quoting.`)
   const cell = (r: string[], field: string) => r[lastIndex.get(field)!] ?? ''
   const seen = new Set<string>()
   for (const r of rows) seen.add(JSON.stringify(fields.map(f => cell(r, f))))

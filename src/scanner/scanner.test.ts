@@ -107,3 +107,25 @@ test('a quoted empty field is a missing value row, not a blank line', () => {
   assert.equal(report.dataset.rows, 1)
   assert.equal(report.column_profiles[0]!.missing_count, 1)
 })
+
+
+test('extra CSV cells are rejected instead of being silently discarded', () => {
+  for (const [text, dataRow] of [
+    ['revenue\n12,PRIVATE_EXTRA_SENTINEL\n', 1],
+    ['revenue\n12,\n', 1],
+    ['revenue,note\n1,"valid, quoted"\n\n2,"two\nlines",PRIVATE_EXTRA_SENTINEL\n', 2],
+    ['revenue\n' + '1\n'.repeat(201) + '2,PRIVATE_EXTRA_SENTINEL\n', 202],
+  ] as Array<[string, number]>) {
+    assert.throws(() => scanCsvText(text, 'synthetic.csv'), {
+      message: `CSV data row ${dataRow} has more cells than the header. Check delimiters and quoting.`,
+    })
+  }
+})
+
+test('short CSV rows keep missing values and quoted delimiters remain valid', () => {
+  const report = scanCsvText('note,revenue\n"ordinary, note",12\nshort\n', 'synthetic.csv')
+  assert.equal(report.dataset.rows, 2)
+  assert.equal(report.column_profiles[0]!.unique_count, 2)
+  assert.equal(report.column_profiles[1]!.missing_count, 1)
+  assert.deepEqual(report.column_profiles[1]!.numeric, { min: 12, max: 12, average: 12 })
+})

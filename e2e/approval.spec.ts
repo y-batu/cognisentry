@@ -264,3 +264,24 @@ for (const { header, error } of [
     await expect(approveButton(page)).toBeDisabled()
   })
 }
+
+
+test('excess CSV cells block scanning and clear the previous approval', async ({ page }) => {
+  await sample(page)
+  await acknowledge(page)
+  await approveButton(page).click()
+  await expect(page.getByText(approved, { exact: true })).toBeVisible()
+  await upload(page, 'synthetic.csv', 'revenue\n12\n\n13,PRIVATE_EXTRA_SENTINEL\n')
+  await expect(page.getByRole('alert')).toHaveText('CSV data row 2 has more cells than the header. Check delimiters and quoting.')
+  await expect(body(page)).toHaveCount(0)
+  await expect(page.getByText(approved, { exact: true })).toHaveCount(0)
+  await expect(page.getByRole('region', { name: 'Scan result', exact: true })).toHaveCount(0)
+  await expect(page.locator('body')).not.toContainText('PRIVATE_EXTRA_SENTINEL')
+  await upload(page, 'synthetic.csv', 'revenue,note\n12,"ordinary, note"\n13\n')
+  await expect(page.getByRole('alert')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Prepare AI context' }).click()
+  await expect(body(page)).toBeVisible()
+  await acknowledge(page)
+  await approveButton(page).click()
+  await expect(page.getByText(approved, { exact: true })).toBeVisible()
+})

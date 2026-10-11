@@ -190,7 +190,12 @@ def scan_csv(path):
             raise ValueError('CSV has empty column names. Give every column a name.')
         if len(set(fields)) != len(fields):
             raise ValueError('CSV has duplicate column names. Give every column a unique name.')
-        rows = list(reader)
+        rows = []
+        for data_row, row in enumerate(reader, start=1):
+            # DictReader stores cells beyond the header under the None key.
+            if None in row:
+                raise ValueError(f'CSV data row {data_row} has more cells than the header. Check delimiters and quoting.')
+            rows.append(row)
     fingerprints = [tuple((r.get(field) or '') for field in fields) for r in rows]
     duplicate_rows = len(fingerprints) - len(set(fingerprints))
     columns, highest = [], 0

@@ -78,6 +78,35 @@ class TestCsvHeaders(unittest.TestCase):
         self.assertEqual([p['numeric']['average'] for p in report['column_profiles']], [1, 2])
 
 
+class TestCsvRowWidths(unittest.TestCase):
+    def test_extra_cells_are_rejected(self):
+        cases = [
+            ('revenue\n12,PRIVATE_EXTRA_SENTINEL\n', 1),
+            ('revenue\n12,\n', 1),
+            ('revenue,note\n1,"valid, quoted"\n\n2,"two\nlines",PRIVATE_EXTRA_SENTINEL\n', 2),
+            ('revenue\n' + '1\n' * 201 + '2,PRIVATE_EXTRA_SENTINEL\n', 202),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'synthetic.csv'
+            for text, data_row in cases:
+                with self.subTest(data_row=data_row, length=len(text)):
+                    path.write_text(text, encoding='utf-8')
+                    with self.assertRaises(ValueError) as error:
+                        sc.scan_csv(path)
+                    self.assertEqual(str(error.exception),
+                                     f'CSV data row {data_row} has more cells than the header. Check delimiters and quoting.')
+
+    def test_short_rows_and_quoted_delimiters_remain_valid(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'synthetic.csv'
+            path.write_text('note,revenue\n"ordinary, note",12\nshort\n', encoding='utf-8')
+            report = sc.scan_csv(path)
+        self.assertEqual(report['dataset']['rows'], 2)
+        self.assertEqual(prof(report, 'note')['unique_count'], 2)
+        self.assertEqual(prof(report, 'revenue')['missing_count'], 1)
+        self.assertEqual(prof(report, 'revenue')['numeric'], {'min': 12, 'max': 12, 'average': 12})
+
+
 class TestStatsWithheldAndStrictJson(unittest.TestCase):
     def test_phone_stats_withheld(self):
         r = scan({"phone": ["+12025550101", "+12025550102"]})
