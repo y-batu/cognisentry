@@ -10,6 +10,7 @@ export function parseCsv(text: string): string[][] {
   const n = text.length
   for (let i = 0; i < n; i++) {
     const ch = text[i]!
+    const hadContent = sawAny
     sawAny = true
     if (inQuotes) {
       if (ch === '"') {
@@ -26,7 +27,7 @@ export function parseCsv(text: string): string[][] {
       field = ''
     } else if (ch === '\n' || ch === '\r') {
       if (ch === '\r' && text[i + 1] === '\n') i++
-      if (row.length === 0 && field === '') rows.push([])
+      if (!hadContent) rows.push([])
       else {
         row.push(field)
         rows.push(row)

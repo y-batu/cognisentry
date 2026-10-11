@@ -242,7 +242,9 @@ export function scanCsvText(text: string, filename: string) {
   const parsed = parseCsv(text.charCodeAt(0) === 0xfeff ? text.slice(1) : text)
   const fields = parsed[0]
   if (!fields || fields.length === 0) throw new Error('CSV has no header row.')
-  // Python's DictReader: skip blank rows, pad short rows, ignore extra cells, later duplicate headers win.
+  if (fields.some(field => !field.trim())) throw new Error('CSV has empty column names. Give every column a name.')
+  if (new Set(fields).size !== fields.length) throw new Error('CSV has duplicate column names. Give every column a unique name.')
+  // Python's DictReader: skip blank rows, pad short rows and ignore extra cells.
   const lastIndex = new Map<string, number>()
   fields.forEach((f, i) => lastIndex.set(f, i))
   const rows = parsed.slice(1).filter(r => r.length > 0)

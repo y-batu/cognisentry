@@ -185,7 +185,12 @@ def scan_csv(path):
     with path.open('r', encoding='utf-8-sig', newline='') as f:
         reader = csv.DictReader(f)
         if not reader.fieldnames: raise ValueError('CSV has no header row.')
-        rows, fields = list(reader), reader.fieldnames
+        fields = reader.fieldnames
+        if any(not field.strip() for field in fields):
+            raise ValueError('CSV has empty column names. Give every column a name.')
+        if len(set(fields)) != len(fields):
+            raise ValueError('CSV has duplicate column names. Give every column a unique name.')
+        rows = list(reader)
     fingerprints = [tuple((r.get(field) or '') for field in fields) for r in rows]
     duplicate_rows = len(fingerprints) - len(set(fingerprints))
     columns, highest = [], 0

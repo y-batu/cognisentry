@@ -52,6 +52,32 @@ def cls(name, values=()):
     return sc.classify_column(name, list(values))
 
 
+class TestCsvHeaders(unittest.TestCase):
+    def test_ambiguous_headers_are_rejected(self):
+        cases = [
+            ('field,field', 'duplicate column names'),
+            ('"field","field"', 'duplicate column names'),
+            ('field,other,field', 'duplicate column names'),
+            (',revenue', 'empty column names'),
+            ('revenue,', 'empty column names'),
+            ('   ,revenue', 'empty column names'),
+            ('"",revenue', 'empty column names'),
+            ('""', 'empty column names'),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'synthetic.csv'
+            for header, error in cases:
+                with self.subTest(header=header):
+                    path.write_text(header + '\nalice@example.test,12,34\n', encoding='utf-8')
+                    with self.assertRaisesRegex(ValueError, error):
+                        sc.scan_csv(path)
+
+    def test_case_distinct_headers_remain_distinct(self):
+        report = scan({'revenue': ['1'], 'Revenue': ['2']})
+        self.assertEqual(report['dataset']['columns'], 2)
+        self.assertEqual([p['numeric']['average'] for p in report['column_profiles']], [1, 2])
+
+
 class TestStatsWithheldAndStrictJson(unittest.TestCase):
     def test_phone_stats_withheld(self):
         r = scan({"phone": ["+12025550101", "+12025550102"]})

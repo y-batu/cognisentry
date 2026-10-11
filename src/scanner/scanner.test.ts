@@ -87,3 +87,23 @@ test('large finite numbers produce finite statistics and a usable safe context',
     assert.notEqual(prepareSafeContext(report).status, 'blocked')
   }
 })
+
+
+test('ambiguous CSV headers are rejected before a report is produced', () => {
+  for (const header of ['field,field', '"field","field"', 'field,other,field']) {
+    assert.throws(() => scanCsvText(header + '\nalice@example.test,12,34\n', 'synthetic.csv'), /duplicate column names/)
+  }
+  for (const header of [',revenue', 'revenue,', '   ,revenue', '"",revenue', '""']) {
+    assert.throws(() => scanCsvText(header + '\n1,2\n', 'synthetic.csv'), /empty column names/)
+  }
+  assert.equal(scanCsvText('revenue,Revenue\n1,2\n', 'synthetic.csv').dataset.columns, 2)
+})
+
+test('a quoted empty field is a missing value row, not a blank line', () => {
+  for (const end of ['\n', '\r\n', '\r']) {
+    assert.deepEqual(parseCsv(`revenue${end}""${end}${end}`), [['revenue'], [''], []])
+  }
+  const report = scanCsvText('revenue\n""\n\n', 'synthetic.csv')
+  assert.equal(report.dataset.rows, 1)
+  assert.equal(report.column_profiles[0]!.missing_count, 1)
+})

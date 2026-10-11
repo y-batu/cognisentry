@@ -242,3 +242,25 @@ for (const { name, csv, rows, numeric } of [
     await expect(page.getByText(approved, { exact: true })).toBeVisible()
   })
 }
+
+
+for (const { header, error } of [
+  { header: 'PRIVATE_COLUMN_SENTINEL,PRIVATE_COLUMN_SENTINEL', error: 'CSV has duplicate column names. Give every column a unique name.' },
+  { header: ',revenue', error: 'CSV has empty column names. Give every column a name.' },
+]) {
+  test(`invalid CSV header clears approval: ${error}`, async ({ page }) => {
+    await sample(page)
+    await acknowledge(page)
+    await approveButton(page).click()
+    await expect(page.getByText(approved, { exact: true })).toBeVisible()
+    await upload(page, 'synthetic.csv', header + '\nalice@example.test,12\n')
+    await expect(page.getByRole('alert')).toHaveText(error)
+    await expect(body(page)).toHaveCount(0)
+    await expect(page.getByText(approved, { exact: true })).toHaveCount(0)
+    await expect(page.getByRole('region', { name: 'Scan result', exact: true })).toHaveCount(0)
+    await expect(page.locator('body')).not.toContainText('PRIVATE_COLUMN_SENTINEL')
+    await sample(page)
+    await expect(page.getByRole('alert')).toHaveCount(0)
+    await expect(approveButton(page)).toBeDisabled()
+  })
+}

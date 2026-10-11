@@ -34,6 +34,8 @@ npm run dev
 
 Choose CSV → local scan → security / quality results → prepare AI context → review exact JSON, withheld counts and warnings → acknowledge → approve payload.
 
+CSV column names must be nonempty (not just whitespace) and unique by exact spelling. Both scanners reject ambiguous headers before producing a report; case-distinct names remain separate. A quoted empty cell counts as a missing value, while a completely blank line is skipped.
+
 ```bash
 python3 poc/cognisentry_local_scanner.py poc/sample_customer_activity.csv
 npm run demo:analyze  # local preview only; no automatic acknowledgement or model call

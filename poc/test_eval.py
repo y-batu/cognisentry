@@ -121,7 +121,8 @@ class TestGoldenVerification(unittest.TestCase):
             output = Path(tmp) / 'generated'
             self.assertEqual(self.invoke(output, check=False)[0], 0)
             before = self.snapshot(output)
-            self.assertEqual(len(before), 14)
+            self.assertIn('numbers.csv', before)
+            self.assertIn('numbers.golden.json', before)
             self.assertEqual(self.invoke(output)[0], 0)
             self.assertEqual(self.snapshot(output), before)
 

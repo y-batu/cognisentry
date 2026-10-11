@@ -42,6 +42,7 @@ FIXTURES = {
     'numbers.csv': 'a,b,c,d\n1,10.5,"1,000",true\n2,,"2,500",false\n3,-4e2,3,yes\n4,.5,4,0\n',
     'duplicates_and_empty.csv': 'x,y,z\n1,a,\n1,a,\n,,\n2,b,\n',
     'extreme_numbers.csv': 'positive,negative,cancelled,maximum,zeros\n1e308,-1e308,1e308,1.7976931348623157e308,0\n1e308,-1e308,1e308,1.7976931348623157e308,0\n1e308,-1e308,-1e308,1.7976931348623157e308,0\n1e308,-1e308,-1e308,1.7976931348623157e308,0\n',
+    'quoted_empty.csv': 'revenue\n""\n\n5\n""\n',
     'eval_all.csv': eval_all(),
 }
 
