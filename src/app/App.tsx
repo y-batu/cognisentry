@@ -16,8 +16,20 @@ export function App() {
   const [meta, setMeta] = useState<{ name: string; size: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
+  const [reading, setReading] = useState(false)
+  const selectionRevision = useRef(0)
   const [scanId, setScanId] = useState(0)
   const input = useRef<HTMLInputElement>(null)
+
+  const beginSelection = useCallback(() => {
+    const revision = ++selectionRevision.current
+    setReport(null)
+    setMeta(null)
+    setError(null)
+    setReading(false)
+    setScanId(id => id + 1)
+    return revision
+  }, [])
 
   const load = useCallback((text: string, name: string, size: number) => {
     try {
@@ -29,17 +41,26 @@ export function App() {
       setMeta(null)
       setError(e instanceof Error ? e.message : 'The file could not be read as CSV.')
     }
-    setScanId(id => id + 1)
   }, [])
 
   const handleFile = useCallback(
     async (file: File | undefined) => {
       if (!file) return
+      const revision = beginSelection()
       if (!/\.csv$/i.test(file.name) && file.type !== 'text/csv') return setError('Please choose a .csv file.')
       if (file.size > MAX_BYTES) return setError(`File is ${formatBytes(file.size)}; the limit for this local scan is ${formatBytes(MAX_BYTES)}.`)
-      load(await file.text(), file.name, file.size)
+      setReading(true)
+      try {
+        const text = await file.text()
+        if (revision !== selectionRevision.current) return
+        load(text, file.name, file.size)
+      } catch {
+        if (revision === selectionRevision.current) setError('The file could not be read. Please choose it again.')
+      } finally {
+        if (revision === selectionRevision.current) setReading(false)
+      }
     },
-    [load],
+    [beginSelection, load],
   )
 
   const onDrop = (e: DragEvent) => {
@@ -71,10 +92,15 @@ export function App() {
           <p>Drag a CSV here, or</p>
           <div className="row">
             <button type="button" onClick={() => input.current?.click()}>Choose CSV</button>
-            <button type="button" className="ghost" onClick={() => load(sampleCsv, 'sample_customer_activity.csv', sampleCsv.length)}>Use synthetic sample</button>
+            <button type="button" className="ghost" onClick={() => { beginSelection(); load(sampleCsv, 'sample_customer_activity.csv', sampleCsv.length) }}>Use synthetic sample</button>
           </div>
-          <input ref={input} type="file" accept=".csv,text/csv" hidden onChange={e => void handleFile(e.target.files?.[0])} />
+          <input ref={input} type="file" accept=".csv,text/csv" hidden onChange={e => {
+            const file = e.target.files?.[0]
+            e.target.value = ''
+            void handleFile(file)
+          }} />
         </div>
+        {reading && <p role="status">Reading CSV locally…</p>}
         {meta && <p className="meta">{meta.name} · {formatBytes(meta.size)}</p>}
         {error && <p className="error" role="alert">{error}</p>}
       </section>

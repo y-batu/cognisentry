@@ -33,3 +33,8 @@ output/
 # Node
 node_modules/
 dist/
+
+# Browser test artifacts
+playwright-report/
+playwright/.cache/
+test-results/

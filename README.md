@@ -10,6 +10,7 @@ Cognisentry is an early-stage dataset security and quality review MVP. It prepar
 - Deterministic `safe-context/1` generation with strict allowlist validation, stable column references, field exclusions and optional restricted Standard labels.
 - Exact JSON payload preview, SHA-256 of that string, required acknowledgements and local payload approval.
 - Automated Python and TypeScript scanner, leakage, schema, approval and deferred gateway contract tests.
+- Chromium interaction tests for local payload approval, hashing and overlapping file selections on desktop and mobile viewports.
 
 **The current app does not call Claude or send the approved payload.** Approval ends with “Payload approved and ready for secure analysis gateway.” There is no production Claude API integration or fabricated model response.
 
@@ -47,7 +48,18 @@ The marketing website is separate from this repository's browser MVP and is unch
 npm test
 npm run typecheck
 npm run build
+python3 -m unittest discover -s scripts -p 'test_*.py'
+python3 scripts/audit-artifacts.py
 ```
+
+Install the browser once, then run the interaction suite:
+
+```bash
+npx playwright install --with-deps chromium
+npm run test:e2e
+```
+
+The browser suite builds the app and starts its own local preview on port 4174. It exercises desktop Chromium and an emulated Pixel 7 viewport; this is not physical-device coverage. Linux browser dependency installation may require administrator access. Test traces and reports are ignored by Git.
 
 `npm test` explicitly imports all suites through a local TypeScript loader and runs assertions with `node:test`. Type checking is a separate required check.
 
