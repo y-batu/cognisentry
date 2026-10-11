@@ -1,29 +1,74 @@
+"""Inspect build artifacts and pending Git contents without printing matched secrets."""
 from pathlib import Path
-import re, subprocess, json
-root=Path(__file__).resolve().parents[1]
-patterns={
- 'provider_token':r'\b(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{16,}|\bgh[pousr]_[A-Za-z0-9]{36,}|\bAKIA[0-9A-Z]{16}\b|\bxox[abprs]-[A-Za-z0-9-]{10,}|\bAIza[0-9A-Za-z_-]{35}|\bsk-(?:ant-)?[A-Za-z0-9_-]{20,}',
- 'private_key':r'-----BEGIN [A-Z ]*PRIVATE KEY-----',
- 'jwt':r'\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}',
+import json
+import re
+import subprocess
+import sys
+
+PATTERNS = {
+    'provider_token': rb'\b(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{16,}|\bgh[pousr]_[A-Za-z0-9]{36,}|\bAKIA[0-9A-Z]{16}\b|\bxox[abprs]-[A-Za-z0-9-]{10,}|\bAIza[0-9A-Za-z_-]{35}|\bsk-(?:ant-)?[A-Za-z0-9_-]{20,}',
+    'private_key': rb'-----BEGIN [A-Z ]*PRIVATE KEY-----',
+    'jwt': rb'\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}',
 }
-build=list((root/'dist').rglob('*'))
-build=[p for p in build if p.is_file()]
-diff=subprocess.check_output(['git','diff','--no-ext-diff','--unified=0'],cwd=root,text=True)
-added='\n'.join(l[1:] for l in diff.splitlines() if l.startswith('+') and not l.startswith('+++'))
-new=subprocess.check_output(['git','ls-files','--others','--exclude-standard'],cwd=root,text=True).splitlines()
-added+='\n'+'\n'.join((root/p).read_text() for p in new)
-findings=[]
-for label,content in [('added diff / new files',added)]+[(str(p.relative_to(root)),p.read_text()) for p in build]:
- for category,pattern in patterns.items():
-  if re.search(pattern,content): findings.append({'file':label,'category':category})
-# No active analysis endpoint or SDK credentials in the browser bundle.
-for p in build:
- if p.suffix=='.js':
-  content=p.read_text()
-  for marker in ['/api/analyze','ANTHROPIC_API_KEY','x-api-key']:
-   if marker in content: findings.append({'file':str(p.relative_to(root)),'category':'gateway marker'})
-unchanged=['poc/cognisentry_local_scanner.py','poc/sample_scan_report.json','poc/test_scanner_hardening.py','src/scanner/scanner.ts','src/scanner/csv.ts','src/scanner/quality.ts','src/app/app.css','index.html']
-assert not subprocess.check_output(['git','diff','--',*unchanged],cwd=root,text=True)
-result={'known_secret_format_findings':findings,'build_files_inspected':len(build),'unchanged_scanner_style_and_page_shell':unchanged,'limitations':'Pattern scan is not proof of absence of arbitrary secrets. Existing bundled demo CSV is synthetic.'}
-print(json.dumps(result,indent=2))
-assert not findings
+
+
+def git(root, *args):
+    return subprocess.check_output(['git', *args], cwd=root, stderr=subprocess.DEVNULL)
+
+
+def paths(output):
+    return [name.decode('utf-8', errors='surrogateescape') for name in output.split(b'\0') if name]
+
+
+def audit(root):
+    findings, errors = [], []
+    inspected = {'staged': 0, 'unstaged': 0, 'untracked': 0, 'build': 0}
+
+    def inspect(name, content, source):
+        inspected[source] += 1
+        for category, pattern in PATTERNS.items():
+            if re.search(pattern, content):
+                findings.append({'file': name, 'source': source, 'category': category})
+        if source == 'build' and name.endswith('.js'):
+            if any(marker in content for marker in [b'/api/analyze', b'ANTHROPIC_API_KEY', b'x-api-key']):
+                findings.append({'file': name, 'source': source, 'category': 'gateway marker'})
+
+    def inspect_file(name, source):
+        path = root / name
+        if path.is_symlink():
+            errors.append({'file': name, 'source': source, 'error': 'symlink_not_inspected'})
+            return
+        try:
+            inspect(name, path.read_bytes(), source)
+        except OSError:
+            errors.append({'file': name, 'source': source, 'error': 'file_not_readable'})
+
+    build = sorted(path for path in (root / 'dist').rglob('*') if path.is_file() or path.is_symlink())
+    if not (root / 'dist/index.html').is_file() or not any(path.suffix == '.js' for path in build):
+        errors.append({'source': 'build', 'error': 'missing_build', 'message': 'Run npm run build before auditing.'})
+    for path in build:
+        inspect_file(str(path.relative_to(root)), 'build')
+
+    # Inspect index blobs separately: a clean working copy can hide a staged secret.
+    try:
+        for name in paths(git(root, 'diff', '--cached', '--name-only', '--diff-filter=ACMR', '-z')):
+            inspect(name, git(root, 'show', ':' + name), 'staged')
+        for name in paths(git(root, 'diff', '--name-only', '--diff-filter=ACMR', '-z')):
+            inspect_file(name, 'unstaged')
+        for name in paths(git(root, 'ls-files', '--others', '--exclude-standard', '-z')):
+            inspect_file(name, 'untracked')
+    except subprocess.CalledProcessError:
+        errors.append({'source': 'git', 'error': 'git_inspection_failed'})
+
+    return {
+        'known_secret_format_findings': findings,
+        'errors': errors,
+        'files_inspected': inspected,
+        'limitations': 'Pattern scanning is not proof of absence of arbitrary secrets. Existing demo data is synthetic. This audit does not check Git history or build freshness.',
+    }
+
+
+if __name__ == '__main__':
+    result = audit(Path(__file__).resolve().parents[1])
+    print(json.dumps(result, indent=2))
+    sys.exit(1 if result['known_secret_format_findings'] or result['errors'] else 0)
