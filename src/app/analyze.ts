@@ -1,9 +1,11 @@
+// Deferred transport: not connected to the current approval UI.
 // The ONLY module in the browser app allowed to touch the network (enforced by app.test.ts).
 //
 // It sends exactly one thing to exactly one endpoint: the previewed request body, unchanged,
 // to /api/analyze, and only when every required acknowledgement is present. It never sees
 // the CSV, the scan report, or any cell value.
 
+import { approvePayload } from './approval.ts'
 import type { SafeContextRequest } from '../safeContext/index.ts'
 
 export const ANALYZE_ENDPOINT = '/api/analyze'
@@ -21,10 +23,11 @@ export interface AnalysisResult {
 
 export async function requestAnalysis(request: SafeContextRequest, signal?: AbortSignal): Promise<AnalysisResult> {
   if (!request.ready) throw new Error('Acknowledgements are required before anything can be sent.')
+  const approved = await approvePayload(request)
   const res = await fetch(ANALYZE_ENDPOINT, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-payload-sha256': request.sha256 },
-    body: request.body,
+    headers: { 'content-type': 'application/json', 'x-payload-sha256': approved.sha256 },
+    body: approved.body,
     signal,
   })
   const json: unknown = await res.json().catch(() => null)

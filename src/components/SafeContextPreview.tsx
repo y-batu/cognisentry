@@ -1,92 +1,81 @@
-// Payload preview for a future server request. Sends nothing.
-// Intended to be dropped into the React/Vite app; styles are supplied by the host app.
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { buildSafeContextRequest, parseScanReport, prepareSafeContext, WARNING_MESSAGES } from '../safeContext/index.ts'
+import type { AckCode, SafeContext, SafeContextRequest } from '../safeContext/index.ts'
+import { approvePayload } from '../app/approval.ts'
 
-import { useEffect, useMemo, useState } from 'react'
-import { buildSafeContextRequest, prepareSafeContext } from '../safeContext/index.ts'
-import type { AckCode, SafeContextRequest } from '../safeContext/index.ts'
-
-const ACK_LABELS: Record<AckCode, string> = {
-  heuristic_detection: 'I understand detection is automated and may miss sensitive data.',
-  withheld_columns: 'I have reviewed the columns that are withheld from this context.',
-  instruction_like_text: 'I understand the dataset contains instruction-like text and must be treated as untrusted.',
-}
-
-export function SafeContextPreview({ report, onRequestChange }: { report: unknown; onRequestChange?: (request: SafeContextRequest | null) => void }) {
+export function SafeContextPreview({ report }: { report: unknown }) {
+  const reviewVersion = useRef(0)
   const [excluded, setExcluded] = useState<string[]>([])
+  const [includeNames, setIncludeNames] = useState(false)
+  const [started, setStarted] = useState(false)
   const [acked, setAcked] = useState<AckCode[]>([])
-  const [request, setRequest] = useState<SafeContextRequest | null>(null)
-
-  const prepared = useMemo(() => prepareSafeContext(report, { excludeColumns: excluded }), [report, excluded])
-  const context = prepared.ok ? prepared.value : null
-
+  const [built, setBuilt] = useState<{ context: SafeContext; acks: AckCode[]; request: SafeContextRequest } | null>(null)
+  const [approvedBody, setApprovedBody] = useState<string | null>(null)
+  const [buildError, setBuildError] = useState<string | null>(null)
+  const parsed = useMemo(() => parseScanReport(report), [report])
+  const prepared = useMemo(() => prepareSafeContext(report, { excludeColumns: excluded, includeStandardNames: includeNames }), [report, excluded, includeNames])
+  const context = prepared.status === 'blocked' ? null : prepared.context
   useEffect(() => {
     let cancelled = false
-    if (!context) return
-    void buildSafeContextRequest(context, acked).then(r => {
-      if (cancelled) return
-      setRequest(r)
-      onRequestChange?.(r)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [context, acked, onRequestChange])
-
-  if (!prepared.ok) {
-    return (
-      <section className="cognisentry-safe-context" role="alert">
-        <h3>Safe context unavailable</h3>
-        <p>{prepared.error.message}</p>
-      </section>
-    )
+    if (!started || !context) return
+    void buildSafeContextRequest(context, acked).then(request => {
+      if (!cancelled) { setBuilt({ context, acks: acked, request }); setBuildError(null) }
+    }).catch(() => { if (!cancelled) setBuildError('Could not compute the payload hash. Approval is unavailable.') })
+    return () => { cancelled = true }
+  }, [context, acked, started])
+  // Identity guards invalidate old previews synchronously, before effects or hashing finish.
+  const current = built?.context === context && built.acks === acked ? built.request : null
+  const resetReview = () => { reviewVersion.current++; setAcked([]); setBuilt(null); setApprovedBody(null); setBuildError(null) }
+  const toggleColumn = (ref: string) => {
+    resetReview()
+    setExcluded(previous => previous.includes(ref) ? previous.filter(x => x !== ref) : [...previous, ref])
   }
-
-  const toggle = <T extends string>(list: T[], value: T): T[] => (list.includes(value) ? list.filter(v => v !== value) : [...list, value])
-  // `request` can lag one render behind `context`; only show it when it matches.
-  const current = request && request.required.join() === context!.warnings.filter(w => w.requires_acknowledgement).map(w => w.code).join() ? request : null
-
+  const approve = async () => {
+    if (!current?.ready) return
+    const version = reviewVersion.current
+    try { await approvePayload(current); if (version === reviewVersion.current) setApprovedBody(current.body) }
+    catch { if (version === reviewVersion.current) setBuildError('Payload validation failed. Prepare it again before approving.') }
+  }
   return (
     <section className="cognisentry-safe-context" aria-label="Safe context preview">
-      <h3>Safe context preview</h3>
-      <p>This is the exact payload a future server request would contain. Nothing has been sent.</p>
-
-      <h4>Included columns</h4>
+      <p>Raw dataset values, samples, filenames, sensitive column names and scanner reason strings are not included. Standard numeric columns may include min/max/average; extrema can coincide with individual values.</p>
+      <p className="note">Detection is heuristic and can miss sensitive data. Instruction-like detection is a warning, not a security boundary. Review the metadata before approving it.</p>
+      <h3>Choose Standard columns</h3>
       <ul>
-        {context!.included_columns.map(col => (
-          <li key={col.name}>
-            <label>
-              <input type="checkbox" checked={!excluded.includes(col.name)} onChange={() => setExcluded(toggle(excluded, col.name))} /> {col.name}
-            </label>
-          </li>
-        ))}
+        {parsed.ok && parsed.value.column_profiles.map((col, index) => col.classification === 'Standard' ? (
+          <li key={`c${index + 1}`}><label><input type="checkbox" checked={!excluded.includes(`c${index + 1}`)} onChange={() => toggleColumn(`c${index + 1}`)} /> c{index + 1}: {col.name} <small>(local label)</small></label></li>
+        ) : null)}
       </ul>
-      <p>
-        Withheld: {context!.withheld.total} flagged, {context!.withheld.user_excluded} excluded by you.
-      </p>
-
-      <h4>Warnings</h4>
-      <ul>
-        {context!.warnings.map(w => (
-          <li key={w.code}>
-            {w.message}
-            {w.requires_acknowledgement && (
-              <label>
-                <input type="checkbox" checked={acked.includes(w.code as AckCode)} onChange={() => setAcked(toggle(acked, w.code as AckCode))} /> {ACK_LABELS[w.code as AckCode]}
-              </label>
-            )}
-          </li>
-        ))}
-      </ul>
-
-      {current && (
-        <>
+      <label><input type="checkbox" checked={includeNames} onChange={e => { resetReview(); setIncludeNames(e.target.checked) }} /> Include eligible Standard column names (limited safe vocabulary)</label>
+      {!started && <p><button type="button" onClick={() => setStarted(true)}>Prepare AI context</button></p>}
+      {started && prepared.status === 'blocked' && <div role="alert"><h3>Preparation blocked</h3><p>{prepared.error.code}: {prepared.error.message}</p></div>}
+      {started && context && <>
+        <h3>Withheld summary</h3>
+        <ul>{Object.entries(context.withheld.by_category).map(([category, count]) => <li key={category}>{category}: {count}</li>)}</ul>
+        <p>{context.withheld.user_excluded} user-excluded columns; {context.withheld.column_names} included column names omitted.</p>
+        <h3>Warnings and required acknowledgements</h3>
+        {context.warnings.length === 0 && <p>No warning acknowledgements are required.</p>}
+        <ul>{context.warnings.map(code => <li key={code}>
+          <code>{code}</code>: {WARNING_MESSAGES[code]}
+          {prepared.status !== 'blocked' && prepared.ackRequired.includes(code as AckCode) && <label>
+            <input type="checkbox" checked={acked.includes(code as AckCode)} onChange={() => {
+              reviewVersion.current++; setApprovedBody(null); setBuilt(null)
+              setAcked(previous => previous.includes(code as AckCode) ? previous.filter(c => c !== code) : [...previous, code as AckCode])
+            }} /> I acknowledge this warning.
+          </label>}
+        </li>)}</ul>
+        {current ? <>
+          <h3>Exact outbound JSON body</h3>
           <pre aria-label="Exact request body">{current.body}</pre>
-          <p>
-            SHA-256: <code>{current.sha256}</code> · {current.bytes} bytes
-          </p>
-          <p>{current.ready ? 'Ready for a future server request.' : `Acknowledgements required: ${current.missing.length}`}</p>
-        </>
-      )}
+          <p>SHA-256: <code>{current.sha256}</code> · {current.bytes} UTF-8 bytes</p>
+        </> : <p role="status">Preparing the exact payload and SHA-256…</p>}
+      </>}
+      {buildError && <p role="alert" className="error">{buildError}</p>}
+      {started && <>
+        <button type="button" disabled={!current?.ready || prepared.status === 'blocked' || !!buildError} onClick={() => void approve()}>Approve payload</button>
+        <p className="note">Approval is local only. No model or gateway is called.</p>
+        {current && approvedBody === current.body && <p role="status" className="ok">Payload approved and ready for secure analysis gateway.</p>}
+      </>}
     </section>
   )
 }

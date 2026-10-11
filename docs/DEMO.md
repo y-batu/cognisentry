@@ -1,56 +1,13 @@
-# Demo
+# Reproducible local demo
 
-Cognisentry AI is a local-first flow: **scan → review → safe-context preview**. Nothing leaves the machine, and no model is called yet.
+Run `npm run dev`, choose “Use synthetic sample”, inspect local security and quality results, then press “Prepare AI context”.
 
-## 1. CLI scan (Python reference scanner)
+The current sample has 6 rows, 8 columns and 1 duplicate. Five columns are withheld: 2 PII, 1 Sensitive, 1 Potentially Sensitive and 1 Secret / High Risk. Only c6 (numeric), c7 (text) and c8 (text) remain. Local labels are revenue, plan and notes; default outbound context omits those names.
 
-```bash
-python3 poc/cognisentry_local_scanner.py poc/sample_customer_activity.csv
-```
+Review the exact JSON and SHA-256. Acknowledge `SECRET_COLUMNS_WITHHELD` and `PII_COLUMNS_WITHHELD`. `COLUMN_NAME_WITHHELD` is informational. Approve the payload: a local readiness message appears; no model is called.
 
-Output for the synthetic sample (6 rows, 8 columns), abridged:
+Try excluding c6, re-including it, toggling eligible names or loading a new CSV. Previous approval must disappear and required acknowledgements must reset. Excluding every Standard column must block preparation while retaining controls to recover.
 
-```
-ai_analysis_readiness: "Sensitive data detected"
-duplicate_rows: 1
+`npm run demo:analyze` prints the same default context and an unacknowledged body locally. `poc/sample_safe_context.json` records the reproducible context. Tests verify it against the current sample scan report.
 
-flagged_fields:
-  customer_id  Sensitive              column name suggests sensitive
-  email        PII                    name + values resemble email addresses
-  phone        PII                    name + values resemble phone numbers
-  ip_address   Potentially Sensitive  name + values resemble IPv4 addresses
-  api_token    Secret / High Risk     column name suggests secret / high risk
-```
-
-The full machine-readable report is in [`poc/sample_scan_report.json`](../poc/sample_scan_report.json).
-
-## 2. Browser demo
-
-```bash
-npm install
-npm run dev
-```
-
-1. Choose a CSV (or use the built-in synthetic sample). The file is parsed and scanned in the browser.
-2. Review the findings per column, plus data-quality findings (duplicates, high missing rate, constant or identifier-like columns).
-3. Preview the exact `safe-context/1` request: no cell values, no samples, no filename, no names of withheld columns. The previewed string is byte-for-byte what would be sent, with its SHA-256 and an acknowledgement gate.
-
-> Screenshots: run `npm run dev` and capture the three steps above into `docs/screenshots/` (not committed yet).
-
-## 3. Gateway and Claude analysis
-
-In the app, step 3 ("Send safe context to Claude") unlocks after you acknowledge the warnings. With `ANTHROPIC_API_KEY` set for `npm run dev` it returns a live analysis; without it the server validates and says no model was called.
-
-```bash
-npm run demo:analyze                       # mock: validates the request, returns a receipt
-ANTHROPIC_API_KEY=... npm run demo:analyze  # live: one Claude call, structured analysis returned
-```
-
-The request sent to Claude is the exact safe-context payload from step 2. A live run returns `summary`, `data_quality_notes`, `suggested_questions` and `limitations`.
-
-## 4. Verify
-
-```bash
-npm test                                                    # 66 TypeScript tests
-(cd poc && python3 -m unittest test_scanner_hardening test_eval)   # 42 Python tests
-```
+This is a working local demo, not a screenshot or simulated Claude answer.

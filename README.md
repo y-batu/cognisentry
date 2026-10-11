@@ -1,159 +1,81 @@
 # Cognisentry AI
 
-Secure AI-native data analysis and adaptive learning.
+Cognisentry is an early-stage dataset security and quality review MVP. It prepares a minimized, reviewable metadata payload before any future AI analysis.
 
-Cognisentry AI is an early-stage platform designed to help people and teams work with real-world datasets while reducing unnecessary exposure of sensitive information.
+## Exists today
 
-## Current Status
+- Local Python CSV scanner with conservative sensitive-data heuristics, free-text inspection, numeric-stat withholding and a reproducible sample report.
+- React / TypeScript / Vite CSV upload and local browser scanner, checked against Python golden fixtures.
+- Local security and data-quality results; no raw dataset upload.
+- Deterministic `safe-context/1` generation with strict allowlist validation, stable column references, field exclusions and optional restricted Standard labels.
+- Exact JSON payload preview, SHA-256 of that string, required acknowledgements and local payload approval.
+- Automated Python and TypeScript scanner, leakage, schema, approval and deferred gateway contract tests.
 
-MVP in development. The server-side Claude call is implemented and unit-tested with a fake client; it has not yet been run against the live API. The browser app is wired to it (step 3), behind explicit acknowledgement.
+**The current app does not call Claude or send the approved payload.** Approval ends with “Payload approved and ready for secure analysis gateway.” There is no production Claude API integration or fabricated model response.
 
-**Exists today**
+## Planned
 
-- A browser app (Vite + React) that runs the whole local flow: choose a CSV, scan it in the browser, review the findings, and preview the exact safe-context request. The only network call is one `POST /api/analyze` with the previewed safe-context body, after you acknowledge the warnings and click (a test restricts network use to `src/app/analyze.ts`).
-- A TypeScript port of the scanner for that app, verified against the Python reference scanner with golden fixtures.
-- A local CSV scanner (Python, standard library only) that profiles a dataset and flags likely PII, credentials, IP addresses, identifiers, and token-like values, including inside free text, and produces a machine-readable AI-analysis readiness report.
-- A deterministic safe-context step (TypeScript) that turns a scan report into a minimized `safe-context/1` payload: no cell values, no samples, no filename, and no names of withheld columns.
-- An exact-payload request builder with SHA-256, acknowledgement gating, and a React preview component. The previewed string is the string that would be sent.
-- Deterministic data-quality findings (duplicates, high missing rates, constant and identifier-like columns) derived from profile statistics only, shown in the browser app (`src/scanner/quality.ts`).
-- A strict server-side request validator and a gateway handler (validation, error codes, rate limiting). Without `ANTHROPIC_API_KEY` it runs in **mock** mode and returns a receipt; with a key it calls Claude (see below).
-- A server-side **Claude analyzer** (`gateway/claudeAnalyzer.ts`): sends only the validated safe context to `claude-opus-5-5` with a JSON-schema structured output, re-validates the reply, and maps refusals, truncation and upstream errors to a generic 502. Deployable as a Cloudflare Pages Function (`functions/api/analyze.ts`).
-- A synthetic evaluation harness that measures the scanner and reports its misses and false positives ([`docs/EVALUATION.md`](docs/EVALUATION.md)).
-- Tests for all of the above (`poc/` Python tests, `src/safeContext/` Node tests).
+- Cloudflare server-side Claude gateway with authentication, shared rate limits and request validation.
+- First Claude dataset-quality workflow over approved metadata, with evaluated structured responses.
+- Controlled read-only SQL, deferred until its execution boundary exists.
+- Adaptive learning, deferred until the analytical workflow is validated.
 
-**Planned, not built**
+There is no general chat assistant or unrestricted Python/SQL execution. Historical analyzer code is retained in `gateway/claudeAnalyzer.ts` for review and fake-client tests; it is disconnected from the app, development server, sample CLI and Cloudflare endpoint. Supplying an environment key does not enable those entrypoints.
 
-- A deployed gateway, authentication, and a shared rate-limit store.
-- Controlled SQL/Python tools and adaptive learning mode.
+## Run locally
 
-The scanner runs locally and does not send the dataset to an external service. Detection is heuristic and can produce false positives and false negatives. The included sample dataset is synthetic. This repository contains the Python reference scanner, the browser demo, the safe-context and gateway code, documentation, and specifications. The marketing page is on the website below.
+Use Node 22.15+ and Python 3. The local test loader uses the existing TypeScript dependency so native Node TypeScript support is unnecessary.
 
-## Demo
+```bash
+npm ci
+npm run dev
+```
 
-See [`docs/DEMO.md`](docs/DEMO.md) for a walkthrough with real scanner output on the synthetic sample.
-
-## Run the PoC
-
-From the repository root:
+Choose CSV → local scan → security / quality results → prepare AI context → review exact JSON, withheld counts and warnings → acknowledge → approve payload.
 
 ```bash
 python3 poc/cognisentry_local_scanner.py poc/sample_customer_activity.csv
+npm run demo:analyze  # local preview only; no automatic acknowledgement or model call
 ```
 
-To generate a report:
+The marketing website is separate from this repository's browser MVP and is unchanged.
+
+## Verify
 
 ```bash
-python3 poc/cognisentry_local_scanner.py poc/sample_customer_activity.csv --out report.json
-```
-
-The scanner uses the Python standard library and should not require external packages.
-
-## Try the Claude analysis
-
-```bash
-npm run demo:analyze                      # mock mode, no key needed
-ANTHROPIC_API_KEY=... npm run demo:analyze # one real Claude call on the safe context
-```
-
-## Run the browser demo
-
-```bash
-npm install
-npm run dev        # local dev server; choose a CSV or use the synthetic sample
-ANTHROPIC_API_KEY=... npm run dev   # same, with live Claude analysis in step 3 (key stays server-side)
+(cd poc && python3 -m unittest -v test_scanner_hardening test_eval)
+npm test
+npm run typecheck
 npm run build
 ```
 
-Run the tests (Node 24+):
+`npm test` explicitly imports all suites through a local TypeScript loader and runs assertions with `node:test`. Type checking is a separate required check.
 
-```bash
-(cd poc && python3 -m unittest test_scanner_hardening test_eval)
-npm test           # 66 TypeScript tests, no installs needed
-npm run typecheck  # needs npm install
-```
+## Safe-context contract
 
-## Product Direction
+The source report is the actual scanner output: `dataset.{rows,columns,duplicate_rows}`, `column_profiles[]` with `name`, `type`, `classification`, missing/unique counts and optional numeric statistics. Free-text warnings use `free_text: true` and `free_text_inspection.{cells_inspected,findings.{email,phone,secret,instruction_like}}`.
 
-The intended workflow is:
+`prepareSafeContext(report, options)` returns `blocked` with reason codes, or `ready` / `needs_ack` with `context`, `ackRequired` and a **local-only** `refToName`. Compatibility `ok` / `value` fields are retained for existing internal consumers. Never serialize the preparation result; only the validated `context` goes into `buildSafeContextRequest`.
 
-Dataset
-→ Security Review
-→ Safe Context Preparation
-→ Claude Reasoning
-→ Controlled Tools
-→ Explainable Results
-→ Adaptive Learning
+- Only Standard columns have per-column metadata. All other classifications become aggregate withheld counts.
+- Names default off. Opt-in names must match a small ordinary-label vocabulary; other labels stay local.
+- `safe_samples` is always `[]`. Cell arrays, filenames, paths, scanner reason strings and arbitrary report fields are never copied.
+- Standard numeric min/max/average are allowed. Extrema can equal source values; this is metadata minimization, not anonymization or differential privacy.
+- Limits: 2,000 input profiles, 100 usable Standard columns, 16 KiB compact UTF-8 context, 64-character optional names. Callers may lower usable-column and byte limits, never raise them.
+- No usable columns, invalid input, excessive columns/bytes or invalid output blocks preparation.
 
-## Planned Claude Integration
+`serializeRequest` is the only outbound JSON serializer. The UI displays `request.body`; SHA-256 is computed over it. The deferred sender passes that same string directly as `fetch`'s body and is not imported by the running app. Any selection change clears acknowledgements/approval and invalidates the old preview immediately.
 
-Claude is planned as the reasoning and orchestration layer for:
+See [safe-context details](docs/SAFE_CONTEXT.md), [security boundaries](docs/SECURITY_BOUNDARIES.md), [roadmap](docs/ROADMAP.md).
 
-- structured dataset reasoning
-- data-quality explanations
-- anomaly analysis
-- controlled analytical tools
-- structured outputs
-- adaptive SQL/Python/statistics tutoring
+## Repository
 
-The planned architecture is:
+- `poc/`: Python scanner, synthetic sample and evaluation tests.
+- `src/scanner/`: browser scanner, quality findings and golden fixtures.
+- `src/safeContext/`: preparation, validation, exact request builder and tests.
+- `src/components/`, `src/app/`: existing browser MVP and local approval.
+- `specs/`: strict safe-context schemas and local tool contracts.
+- `gateway/`: deferred gateway prototypes and historical analyzer tests.
+- `functions/api/analyze.ts`: disabled endpoint (503); no model calls.
 
-React/Vite
-→ local preprocessing
-→ Cloudflare Worker / Pages Function
-→ Claude API
-→ controlled analytical tools
-
-The server-side call exists but is not deployed. Where Claude is used, why, and the rollout are in [`docs/CLAUDE_INTEGRATION.md`](docs/CLAUDE_INTEGRATION.md).
-
-## Architecture
-
-```
-CSV  ->  local scan  ->  safe-context  ->  exact payload preview  ->  user acknowledgement
-                                                                          |
-                                         (exists)  server-side validation + mock gateway
-                                                                          |
-                                         (planned) Claude call on the approved safe context only
-```
-
-The browser/local side decides what is allowed to leave. The server re-validates everything and never trusts the client. See [`gateway/README.md`](gateway/README.md) and [`docs/SAFE_CONTEXT.md`](docs/SAFE_CONTEXT.md).
-
-## Security Direction
-
-Key principles:
-
-- inspect sensitive information before AI analysis
-- minimize data sent to external models
-- treat dataset content as untrusted
-- keep API secrets server-side
-- prefer controlled tool interfaces over unrestricted execution
-- make analytical actions auditable
-
-More details are available in [`docs/SECURITY_BOUNDARIES.md`](docs/SECURITY_BOUNDARIES.md).
-
-## Repository Structure
-
-- `poc/` — the local CSV scanner (`cognisentry_local_scanner.py`), a synthetic sample dataset and report, scanner tests, and the evaluation harness in `poc/eval/`.
-- `src/app/`, `index.html` — the browser demo. `src/scanner/` — TypeScript scanner port and Python-generated golden fixtures.
-- `src/safeContext/` — safe-context preparation, exact request builder, strict request validator, and tests. `src/components/` holds the preview component.
-- `gateway/` — the analysis gateway handler (mock by default) and the Claude analyzer. `functions/` — the Pages Function entry point. `scripts/` — the end-to-end demo.
-- `docs/` — project brief, security boundaries, threat model, safe-context notes, evaluation, MVP test plan, and roadmap.
-- `specs/` — draft Claude tool contracts (not implemented) and the JSON Schema for the safe-context request.
-
-## Roadmap
-
-1. **Local CSV scanner** — schema inference, missing values, duplicates, sensitive-data heuristics, readiness result.
-2. **Safe context preparation** — field exclusion, redaction, safe samples, preview of what would be sent to a model.
-3. **Claude API gateway** — Cloudflare Worker / Function with a server-side secret, request validation, and rate limiting.
-4. **First Claude-assisted analytical workflow** — reasoning over safe schema, explaining data-quality findings, structured analysis plans.
-5. **Controlled SQL/Python tools** — read-only SQL first, isolated Python later.
-6. **Adaptive learning mode** — exercise generation, answer evaluation, hints, and feedback.
-
-See [`docs/ROADMAP.md`](docs/ROADMAP.md) for details.
-
-## Website
-
-https://ybatuhan.dev/cognisentry
-
-## Status
-
-Early-stage MVP development.
+Passing local tests does not imply a deployed production integration.

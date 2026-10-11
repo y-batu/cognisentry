@@ -1,45 +1,23 @@
-# Cognisentry AI — Near-Term Roadmap
+# Cognisentry roadmap
 
-## Milestone 1 — Local scanner
-- CSV upload
-- schema inference
-- missing values
-- duplicates
-- sensitive-data heuristics
-- numeric profiling
-- AI-readiness result
+## Implemented locally
 
-## Milestone 2 — Review and safe context
-- user can exclude fields
-- redact selected values
-- safe sample generation
-- preview exactly what would be sent to an AI model
+1. CSV upload, Python reference scanner and browser port, type/missing/duplicate statistics, conservative sensitivity checks, free-text inspection and reproducible sample reports.
+2. Strict versioned safe-context generation: Standard metadata only, stable refs, exclusions, opt-in restricted labels, all non-Standard fields withheld by category, empty samples.
+3. Exact JSON preview and SHA-256, explicit warning acknowledgements, stale-preview invalidation and local payload approval. No model call or fabricated response.
 
-## Milestone 3 — Claude gateway
-- Cloudflare Worker / Function
-- server-side Claude API secret
-- request validation
-- rate limiting
-- structured response format
-- no arbitrary frontend API access
+## Next: secure Cloudflare gateway (planned)
 
-## Milestone 4 — First Claude workflow
-Start narrow:
-- reason over safe schema
-- explain data-quality findings
-- suggest analysis questions
-- produce structured analytical plan
+Review the existing disconnected prototype before use. Add authentication, shared rate limits, bounded request handling and retention/logging controls. Revalidate approved context server-side; accept exactly the reviewed body. Keep secrets exclusively server-side. Do not treat a payload hash or acknowledgement array as authentication.
 
-## Milestone 5 — Controlled tool use
-- inspect_schema
-- check_sensitive_data
-- prepare_safe_context
-- read-only SQL
-- later: isolated Python
+## First Claude workflow (planned)
 
-## Milestone 6 — Adaptive learning
-- SQL exercise generation
-- answer evaluation
-- hints
-- reasoning feedback
-- difficulty progression
+A narrow dataset-quality workflow: explain approved metadata, identify quality issues and limitations, suggest grounded analysis questions and return a validated structured plan. No general chat and no raw dataset values. Establish fake-client and adversarial evals, then a separately authorized live smoke test. Production integration is not claimed today.
+
+## Controlled SQL (deferred)
+
+Read-only SQL requires an isolated executor, validated statements, time/output limits and explicit approval semantics. It is not currently Claude-callable. No unrestricted Python execution is on this milestone's scope.
+
+## Adaptive learning (deferred)
+
+SQL exercises, hints, answer evaluation and difficulty progression follow a measured, reliable analytical workflow.

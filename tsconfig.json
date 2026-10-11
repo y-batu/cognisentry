@@ -1,10 +1,14 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022"
+    ],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,
@@ -14,6 +18,14 @@
     "noUncheckedIndexedAccess": true,
     "resolveJsonModule": true
   },
-  "include": ["src/safeContext", "src/scanner", "gateway", "functions"],
-  "exclude": ["src/components"]
+  "include": [
+    "src/safeContext",
+    "src/scanner",
+    "gateway",
+    "functions",
+    "src/app/**/*.ts"
+  ],
+  "exclude": [
+    "src/components"
+  ]
 }

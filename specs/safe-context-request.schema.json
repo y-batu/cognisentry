@@ -1,100 +1,220 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "safe-context-request/1",
-  "description": "Body of a future analysis request. Contains schema-level metadata and counts only: no cell values, samples, filenames, or names of withheld columns. Validated server-side by src/safeContext/validateRequest.ts, which is stricter than this schema (fixed warning text, count consistency, canonical serialization).",
   "type": "object",
-  "additionalProperties": false,
-  "required": ["request_schema", "safe_context", "acknowledged"],
   "properties": {
-    "request_schema": { "const": "safe-context-request/1" },
-    "acknowledged": {
-      "type": "array",
-      "uniqueItems": true,
-      "items": { "enum": ["heuristic_detection", "withheld_columns", "instruction_like_text"] }
+    "request_schema": {
+      "const": "safe-context-request/1"
     },
     "safe_context": {
       "type": "object",
-      "additionalProperties": false,
-      "required": ["schema_version", "dataset", "scanner_readiness", "included_columns", "withheld", "warnings"],
       "properties": {
-        "schema_version": { "const": "safe-context/1" },
+        "schema_version": {
+          "const": "safe-context/1"
+        },
         "dataset": {
           "type": "object",
-          "additionalProperties": false,
-          "required": ["rows", "columns", "duplicate_rows"],
           "properties": {
-            "rows": { "type": "integer", "minimum": 0 },
-            "columns": { "type": "integer", "minimum": 0 },
-            "duplicate_rows": { "type": "integer", "minimum": 0 }
-          }
+            "rows": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "columns": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "duplicate_rows": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "rows",
+            "columns",
+            "duplicate_rows"
+          ],
+          "additionalProperties": false
         },
-        "scanner_readiness": { "enum": ["Sensitive data detected", "Review recommended", "No findings (heuristic)"] },
         "included_columns": {
           "type": "array",
-          "maxItems": 2000,
+          "minItems": 1,
+          "maxItems": 100,
           "items": {
             "type": "object",
-            "additionalProperties": false,
-            "required": ["name", "type", "missing_count", "missing_percent", "unique_count"],
             "properties": {
-              "name": { "type": "string", "minLength": 1, "maxLength": 64 },
-              "type": { "enum": ["number", "boolean", "text", "empty"] },
-              "missing_count": { "type": "integer", "minimum": 0 },
-              "missing_percent": { "type": "number", "minimum": 0, "maximum": 100 },
-              "unique_count": { "type": "integer", "minimum": 0 },
+              "ref": {
+                "type": "string",
+                "pattern": "^c[1-9][0-9]*$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "type": {
+                "enum": [
+                  "number",
+                  "boolean",
+                  "text",
+                  "empty"
+                ]
+              },
+              "missing_count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "missing_percent": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "unique_count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
               "numeric": {
                 "type": "object",
-                "additionalProperties": false,
-                "required": ["average"],
-                "properties": { "average": { "type": "number" } }
-              },
-              "free_text": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": ["cells_inspected"],
-                "properties": { "cells_inspected": { "type": "integer", "minimum": 0 } }
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  },
+                  "average": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "min",
+                  "max",
+                  "average"
+                ],
+                "additionalProperties": false
               }
-            }
+            },
+            "required": [
+              "ref",
+              "type",
+              "missing_count",
+              "missing_percent",
+              "unique_count"
+            ],
+            "additionalProperties": false
           }
         },
         "withheld": {
           "type": "object",
-          "additionalProperties": false,
-          "required": ["total", "by_category", "user_excluded"],
           "properties": {
-            "total": { "type": "integer", "minimum": 0 },
-            "user_excluded": { "type": "integer", "minimum": 0 },
+            "total": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
             "by_category": {
               "type": "object",
-              "additionalProperties": false,
-              "required": ["Potentially Sensitive", "PII", "Sensitive", "Secret / High Risk", "Unsafe column name"],
               "properties": {
-                "Potentially Sensitive": { "type": "integer", "minimum": 0 },
-                "PII": { "type": "integer", "minimum": 0 },
-                "Sensitive": { "type": "integer", "minimum": 0 },
-                "Secret / High Risk": { "type": "integer", "minimum": 0 },
-                "Unsafe column name": { "type": "integer", "minimum": 0 }
-              }
+                "Potentially Sensitive": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "PII": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "Sensitive": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "Secret / High Risk": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "Potentially Sensitive",
+                "PII",
+                "Sensitive",
+                "Secret / High Risk"
+              ],
+              "additionalProperties": false
+            },
+            "user_excluded": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "column_names": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
-          }
+          },
+          "required": [
+            "total",
+            "by_category",
+            "user_excluded",
+            "column_names"
+          ],
+          "additionalProperties": false
         },
         "warnings": {
           "type": "array",
-          "maxItems": 4,
+          "maxItems": 6,
+          "uniqueItems": true,
           "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["code", "message", "requires_acknowledgement"],
-            "properties": {
-              "code": { "enum": ["heuristic_detection", "withheld_columns", "instruction_like_text", "no_included_columns"] },
-              "message": { "type": "string", "maxLength": 300 },
-              "requires_acknowledgement": { "type": "boolean" },
-              "columns": { "type": "array", "items": { "type": "string", "maxLength": 64 } },
-              "cells": { "type": "integer", "minimum": 0 }
-            }
+            "enum": [
+              "INSTRUCTION_LIKE_CONTENT",
+              "FREE_TEXT_NOT_INJECTION_SCANNED",
+              "SECRET_COLUMNS_WITHHELD",
+              "PII_COLUMNS_WITHHELD",
+              "COLUMN_NAME_WITHHELD",
+              "USER_EXCLUDED_COLUMNS"
+            ]
           }
+        },
+        "safe_samples": {
+          "type": "array",
+          "maxItems": 0
         }
+      },
+      "required": [
+        "schema_version",
+        "dataset",
+        "included_columns",
+        "withheld",
+        "warnings",
+        "safe_samples"
+      ],
+      "additionalProperties": false,
+      "description": "Metadata only. Runtime validation additionally enforces name vocabulary, count consistency, numeric type consistency, warning requirements and 16 KiB compact UTF-8 size."
+    },
+    "acknowledged": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 4,
+      "items": {
+        "enum": [
+          "INSTRUCTION_LIKE_CONTENT",
+          "FREE_TEXT_NOT_INJECTION_SCANNED",
+          "SECRET_COLUMNS_WITHHELD",
+          "PII_COLUMNS_WITHHELD"
+        ]
       }
     }
-  }
+  },
+  "required": [
+    "request_schema",
+    "safe_context",
+    "acknowledged"
+  ],
+  "additionalProperties": false
 }

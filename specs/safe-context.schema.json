@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "safe-context/1"
+    },
+    "dataset": {
+      "type": "object",
+      "properties": {
+        "rows": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "duplicate_rows": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "rows",
+        "columns",
+        "duplicate_rows"
+      ],
+      "additionalProperties": false
+    },
+    "included_columns": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "properties": {
+          "ref": {
+            "type": "string",
+            "pattern": "^c[1-9][0-9]*$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "type": {
+            "enum": [
+              "number",
+              "boolean",
+              "text",
+              "empty"
+            ]
+          },
+          "missing_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "missing_percent": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "unique_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "numeric": {
+            "type": "object",
+            "properties": {
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "average": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "min",
+              "max",
+              "average"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "ref",
+          "type",
+          "missing_count",
+          "missing_percent",
+          "unique_count"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "withheld": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "by_category": {
+          "type": "object",
+          "properties": {
+            "Potentially Sensitive": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "PII": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "Sensitive": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "Secret / High Risk": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "Potentially Sensitive",
+            "PII",
+            "Sensitive",
+            "Secret / High Risk"
+          ],
+          "additionalProperties": false
+        },
+        "user_excluded": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "column_names": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "total",
+        "by_category",
+        "user_excluded",
+        "column_names"
+      ],
+      "additionalProperties": false
+    },
+    "warnings": {
+      "type": "array",
+      "maxItems": 6,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "INSTRUCTION_LIKE_CONTENT",
+          "FREE_TEXT_NOT_INJECTION_SCANNED",
+          "SECRET_COLUMNS_WITHHELD",
+          "PII_COLUMNS_WITHHELD",
+          "COLUMN_NAME_WITHHELD",
+          "USER_EXCLUDED_COLUMNS"
+        ]
+      }
+    },
+    "safe_samples": {
+      "type": "array",
+      "maxItems": 0
+    }
+  },
+  "required": [
+    "schema_version",
+    "dataset",
+    "included_columns",
+    "withheld",
+    "warnings",
+    "safe_samples"
+  ],
+  "additionalProperties": false,
+  "description": "Metadata only. Runtime validation additionally enforces name vocabulary, count consistency, numeric type consistency, warning requirements and 16 KiB compact UTF-8 size."
+}

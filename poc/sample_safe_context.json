@@ -1,0 +1,53 @@
+{
+  "schema_version": "safe-context/1",
+  "dataset": {
+    "rows": 6,
+    "columns": 8,
+    "duplicate_rows": 1
+  },
+  "included_columns": [
+    {
+      "ref": "c6",
+      "type": "number",
+      "missing_count": 0,
+      "missing_percent": 0,
+      "unique_count": 5,
+      "numeric": {
+        "min": 0,
+        "max": 210.25,
+        "average": 95.9167
+      }
+    },
+    {
+      "ref": "c7",
+      "type": "text",
+      "missing_count": 0,
+      "missing_percent": 0,
+      "unique_count": 4
+    },
+    {
+      "ref": "c8",
+      "type": "text",
+      "missing_count": 2,
+      "missing_percent": 33.33,
+      "unique_count": 3
+    }
+  ],
+  "withheld": {
+    "total": 5,
+    "by_category": {
+      "Potentially Sensitive": 1,
+      "PII": 2,
+      "Sensitive": 1,
+      "Secret / High Risk": 1
+    },
+    "user_excluded": 0,
+    "column_names": 3
+  },
+  "warnings": [
+    "SECRET_COLUMNS_WITHHELD",
+    "PII_COLUMNS_WITHHELD",
+    "COLUMN_NAME_WITHHELD"
+  ],
+  "safe_samples": []
+}

@@ -13,7 +13,7 @@ export interface ScanColumnProfile {
   unique_count: number
   classification: Classification
   numeric?: { min: number; max: number; average: number }
-  free_text?: { cells_inspected: number; instruction_like: number }
+  free_text?: { cells_inspected: number; instruction_like: number; email: number; phone: number; secret: number }
 }
 
 export interface ScanReport {
@@ -25,7 +25,7 @@ export interface ScanReport {
 type Rec = Record<string, unknown>
 
 const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v)
-const isCount = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0
+const isCount = (v: unknown): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= 0
 const isFiniteNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
 const oneOf = <T extends string>(list: readonly T[], v: unknown): v is T => typeof v === 'string' && (list as readonly string[]).includes(v)
 
@@ -59,12 +59,21 @@ function parseProfile(raw: unknown, index: number): ScanColumnProfile {
     profile.numeric = { min: n.min, max: n.max, average: n.average }
   }
 
+  if (raw.free_text !== undefined && typeof raw.free_text !== 'boolean') return fail(`${where}.free_text must be boolean`)
+  if (raw.free_text_inspection !== undefined && raw.free_text !== true) return fail(`${where}.free_text_inspection requires free_text=true`)
   if (raw.free_text === true) {
+    if (raw.type !== 'text') return fail(`${where}.free_text requires text type`)
     const insp = raw.free_text_inspection
-    if (!isRec(insp) || !isCount(insp.cells_inspected) || !isRec(insp.findings)) return fail(`${where}.free_text_inspection is malformed`)
-    const instruction = insp.findings.instruction_like
-    if (!isCount(instruction)) return fail(`${where}.free_text_inspection.findings.instruction_like must be a non-negative integer`)
-    profile.free_text = { cells_inspected: insp.cells_inspected, instruction_like: instruction }
+    if (insp === undefined) {
+      profile.free_text = { cells_inspected: 0, instruction_like: 0, email: 0, phone: 0, secret: 0 }
+    } else {
+      if (!isRec(insp) || !isCount(insp.cells_inspected) || !isRec(insp.findings)) return fail(`${where}.free_text_inspection is malformed`)
+      const f = insp.findings
+      for (const key of ['instruction_like', 'email', 'phone', 'secret']) {
+        if (!isCount(f[key]) || (f[key] as number) > insp.cells_inspected) return fail(`${where}.free_text_inspection finding is invalid`)
+      }
+      profile.free_text = { cells_inspected: insp.cells_inspected, instruction_like: f.instruction_like as number, email: f.email as number, phone: f.phone as number, secret: f.secret as number }
+    }
   }
 
   return profile
@@ -79,7 +88,19 @@ export function parseScanReport(input: unknown): Result<ScanReport> {
     if (!Array.isArray(input.column_profiles)) return fail('column_profiles must be an array')
     if (input.column_profiles.length > MAX_REPORT_COLUMNS) return fail(`column_profiles exceeds ${MAX_REPORT_COLUMNS} columns`)
     if (input.column_profiles.length !== d.columns) return fail('dataset.columns does not match column_profiles length')
+    if (d.duplicate_rows > Math.max(0, d.rows - 1)) return fail('duplicate_rows exceeds row count')
     const profiles = input.column_profiles.map((p, i) => parseProfile(p, i))
+    if (new Set(profiles.map(p => p.name)).size !== profiles.length) return fail('duplicate column names are ambiguous')
+    for (const p of profiles) {
+      const present = d.rows - p.missing_count
+      if (present < 0 || p.unique_count > present || (present > 0 && p.unique_count === 0)) return fail('column counts are inconsistent')
+      if (Math.abs(p.missing_percent - (d.rows ? p.missing_count / d.rows * 100 : 0)) > 0.011) return fail('missing percentage is inconsistent')
+      if ((p.type === 'empty') !== (present === 0)) return fail('empty type is inconsistent')
+      if (p.numeric && (p.type !== 'number' || p.numeric.min > p.numeric.max || p.numeric.average < p.numeric.min - 0.0001 || p.numeric.average > p.numeric.max + 0.0001)) return fail('numeric statistics are inconsistent')
+      if (p.type === 'number' && p.classification === 'Standard' && !p.numeric) return fail('Standard numeric statistics are missing')
+      if (p.free_text && p.free_text.cells_inspected > Math.min(1000, present)) return fail('inspection exceeds scanner limit or present cells')
+      if (p.free_text && p.classification === 'Standard' && (p.free_text.email || p.free_text.phone || p.free_text.secret)) return fail('Standard classification conflicts with free-text findings')
+    }
     return {
       ok: true,
       value: {

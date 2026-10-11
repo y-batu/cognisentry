@@ -1,10 +1,54 @@
 {
-  "version": "0.1",
-  "status": "draft",
+  "version": "0.2",
+  "status": "local MVP; gateway deferred",
   "tools": [
-    {"name":"inspect_schema","description":"Return safe schema metadata for an approved dataset.","input":{"dataset_id":"string"},"output":{"columns":"array","row_count":"integer","sensitivity_summary":"array"}},
-    {"name":"check_sensitive_data","description":"Run deterministic/heuristic sensitive-data checks before model analysis.","input":{"dataset_id":"string","columns":"array|null"},"output":{"findings":"array","highest_risk":"string"}},
-    {"name":"prepare_safe_context","description":"Create minimized approved context for a future Claude request.","input":{"dataset_id":"string","exclude_columns":"array","sample_rows":"integer"},"output":{"schema":"object","statistics":"object","safe_samples":"array"}},
-    {"name":"run_sql","description":"Execute validated read-only analytical SQL in an isolated environment.","input":{"dataset_id":"string","query":"string"},"output":{"columns":"array","rows":"array","truncated":"boolean"}}
-  ]
+    {
+      "name": "inspect_schema",
+      "execution": "local",
+      "claude_callable": false,
+      "status": "implemented_local",
+      "description": "Inspect schema metadata with the fixed local scanner."
+    },
+    {
+      "name": "check_sensitive_data",
+      "execution": "local",
+      "claude_callable": false,
+      "status": "implemented_local",
+      "description": "Run local sensitivity and free-text heuristics."
+    },
+    {
+      "name": "prepare_safe_context",
+      "execution": "local",
+      "claude_callable": false,
+      "status": "implemented_local",
+      "description": "Project the current scanner report onto the strict safe-context/1 allowlist.",
+      "input": {
+        "scan_report": "current local scanner output",
+        "exclude_columns": "stable references preferred",
+        "include_standard_names": "boolean; default false"
+      },
+      "output": {
+        "status": "blocked | ready | needs_ack",
+        "context": "safe-context/1 when not blocked",
+        "ackRequired": "required warning codes",
+        "refToName": "local only; never serialized",
+        "safe_samples": "always empty inside context"
+      }
+    }
+  ],
+  "deferred": [
+    {
+      "name": "run_sql",
+      "status": "deferred",
+      "claude_callable": false,
+      "execution": "not implemented",
+      "constraints": [
+        "read-only",
+        "isolated",
+        "bounded",
+        "validated"
+      ]
+    }
+  ],
+  "unrestricted_python_included": false
 }

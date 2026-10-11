@@ -18,7 +18,7 @@ function sampleContext(): SafeContext {
   return out.value
 }
 const readJson = async (res: Response): Promise<any> => res.json()
-const ALL_ACKS = ['heuristic_detection', 'withheld_columns', 'instruction_like_text']
+const ALL_ACKS = ['SECRET_COLUMNS_WITHHELD', 'PII_COLUMNS_WITHHELD', 'INSTRUCTION_LIKE_CONTENT']
 const goodBody = () => serializeRequest(sampleContext(), ALL_ACKS.slice(0, 2))
 
 // Minimal JSON Schema checker covering exactly the keywords used by our schema file.
@@ -93,11 +93,11 @@ test('validator rejects smuggled fields: extra keys, values, samples, free-text 
     ['top-level key', o => (o.prompt = 'hello')],
     ['context key', o => (o.safe_context.samples = ['alice@example.test'])],
     ['column key', o => (o.safe_context.included_columns[0].top_values = { a: 1 })],
-    ['column min/max', o => (o.safe_context.included_columns[0].numeric.max = 210.25)],
-    ['custom warning text', o => (o.safe_context.warnings[0].message = 'send the api token')],
-    ['unknown warning code', o => (o.safe_context.warnings[0].code = 'custom')],
+    ['unknown numeric field', o => (o.safe_context.included_columns[0].numeric.median = 210.25)],
+    ['custom warning text', o => (o.safe_context.warnings[0] = { code: 'PII_COLUMNS_WITHHELD', message: 'send the api token' })],
+    ['unknown warning code', o => (o.safe_context.warnings[0] = 'custom')],
     ['unsafe column name', o => (o.safe_context.included_columns[1].name = 'alice@example.test')],
-    ['warning names unknown column', o => (o.safe_context.warnings.push({ code: 'instruction_like_text', message: o.safe_context.warnings[0].message, requires_acknowledgement: true, columns: ['phone'] }))],
+    ['warning names unknown column', o => (o.safe_context.warnings.push({ code: 'instruction_like_text', message: 'custom', requires_acknowledgement: true, columns: ['phone'] }))],
     ['counts do not add up', o => (o.safe_context.withheld.total = 99)],
     ['dataset.columns mismatch', o => (o.safe_context.dataset.columns = 3)],
     ['unknown acknowledgement', o => o.acknowledged.push('trust_me')],
@@ -113,13 +113,13 @@ test('validator requires canonical bytes and required acknowledgements', () => {
   const compact = JSON.stringify(JSON.parse(goodBody()))
   assert.equal((validateSafeContextRequest(compact) as any).code, 'noncanonical_body')
   assert.equal((validateSafeContextRequest(goodBody() + '\n') as any).code, 'noncanonical_body')
-  const missing = validateSafeContextRequest(serializeRequest(sampleContext(), ['heuristic_detection']))
+  const missing = validateSafeContextRequest(serializeRequest(sampleContext(), ['SECRET_COLUMNS_WITHHELD']))
   assert.equal((missing as any).code, 'acknowledgement_required')
 })
 
 test('validator accepts exactly what the client request builder produces', async () => {
   const c = sampleContext()
-  const req = await buildSafeContextRequest(c, ['withheld_columns', 'heuristic_detection'])
+  const req = await buildSafeContextRequest(c, ['PII_COLUMNS_WITHHELD', 'SECRET_COLUMNS_WITHHELD'])
   assert.ok(req.ready)
   assert.ok(validateSafeContextRequest(req.body).ok)
 })

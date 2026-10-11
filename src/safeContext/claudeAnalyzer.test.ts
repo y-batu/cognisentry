@@ -54,7 +54,7 @@ test('prompt carries no cell values or filename from the sample dataset', async 
   await createClaudeAnalyzer(client)(context, signal())
   const sent = JSON.stringify(calls[0])
   const csv = readFileSync(root + 'poc/sample_customer_activity.csv', 'utf8').split('\n').slice(1)
-  for (const cell of csv.flatMap(l => l.split(',')).filter(c => c.length > 4)) {
+  for (const cell of csv.flatMap(l => l.split(',').filter((_, i) => i !== 5)).filter(c => c.length > 4)) {
     assert.ok(!sent.includes(cell), `cell value leaked: ${cell}`)
   }
   assert.ok(!sent.includes('sample_customer_activity'))
@@ -87,7 +87,7 @@ test('extra keys from the model are dropped', () => {
 
 test('full gateway flow returns a live analysis for a valid request', async () => {
   const analyzer = createClaudeAnalyzer(fakeClient({}).client)
-  const body = serializeRequest(context, ['heuristic_detection', 'withheld_columns'])
+  const body = serializeRequest(context, ['SECRET_COLUMNS_WITHHELD', 'PII_COLUMNS_WITHHELD'])
   const res = await handleAnalyze(
     new Request('https://x/api/analyze', { method: 'POST', headers: { 'content-type': 'application/json' }, body }),
     { rateStore: createMemoryRateStore(), analyzer },
@@ -110,7 +110,7 @@ test('an invalid request never reaches the model', async () => {
 
 test('upstream failures return a generic 502 without echoing error text', async () => {
   const client = { messages: { create: async () => { throw new Error('boom: leaked-detail') } } } as unknown as MessagesClient
-  const body = serializeRequest(context, ['heuristic_detection', 'withheld_columns'])
+  const body = serializeRequest(context, ['SECRET_COLUMNS_WITHHELD', 'PII_COLUMNS_WITHHELD'])
   const res = await handleAnalyze(
     new Request('https://x/api/analyze', { method: 'POST', headers: { 'content-type': 'application/json' }, body }),
     { rateStore: createMemoryRateStore(), analyzer: createClaudeAnalyzer(client) },

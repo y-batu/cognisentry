@@ -4,6 +4,7 @@
 // `body` and any future sender must transmit `body` unchanged. Nothing here sends
 // anything, and no model name is chosen at this layer.
 
+import { validateSafeContext } from './validateContext.ts'
 import { ACK_CODES, REQUEST_VERSION } from './schema.ts'
 import type { AckCode, SafeContext } from './schema.ts'
 import { requiredAcknowledgements } from './prepareSafeContext.ts'
@@ -24,6 +25,7 @@ function normalizeAcks(acknowledged: readonly string[]): AckCode[] {
 }
 
 export function serializeRequest(context: SafeContext, acknowledged: readonly string[]): string {
+  if (!validateSafeContext(context)) throw new Error('Invalid safe context.')
   return JSON.stringify(
     { request_schema: REQUEST_VERSION, safe_context: context, acknowledged: normalizeAcks(acknowledged) },
     null,
@@ -37,9 +39,12 @@ export async function sha256Hex(text: string): Promise<string> {
 }
 
 export async function buildSafeContextRequest(context: SafeContext, acknowledged: readonly string[]): Promise<SafeContextRequest> {
-  const body = serializeRequest(context, acknowledged)
+  // Read only a validated snapshot: subsequent caller mutation cannot alter readiness.
+  if (!validateSafeContext(context)) throw new Error('Invalid safe context.')
+  const snapshot = structuredClone(context)
+  const body = serializeRequest(snapshot, acknowledged)
   const have = new Set(normalizeAcks(acknowledged))
-  const required = requiredAcknowledgements(context)
+  const required = requiredAcknowledgements(snapshot)
   const missing = required.filter(code => !have.has(code))
   return {
     body,

@@ -1,12 +1,8 @@
 import { useCallback, useRef, useState } from 'react'
 import type { DragEvent } from 'react'
 import { SafeContextPreview } from '../components/SafeContextPreview.tsx'
-import { validateSafeContextRequest } from '../safeContext/index.ts'
-import type { SafeContextRequest } from '../safeContext/index.ts'
 import { findQualityIssues } from '../scanner/quality.ts'
 import { scanCsvText } from '../scanner/scanner.ts'
-import { requestAnalysis } from './analyze.ts'
-import type { AnalysisResult } from './analyze.ts'
 import sampleCsv from '../../poc/sample_customer_activity.csv?raw'
 
 type Report = ReturnType<typeof scanCsvText>
@@ -20,8 +16,7 @@ export function App() {
   const [meta, setMeta] = useState<{ name: string; size: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
-  const [request, setRequest] = useState<SafeContextRequest | null>(null)
-  const [analysis, setAnalysis] = useState<{ state: 'idle' | 'running' | 'done' | 'error'; result?: AnalysisResult; message?: string }>({ state: 'idle' })
+  const [scanId, setScanId] = useState(0)
   const input = useRef<HTMLInputElement>(null)
 
   const load = useCallback((text: string, name: string, size: number) => {
@@ -34,8 +29,7 @@ export function App() {
       setMeta(null)
       setError(e instanceof Error ? e.message : 'The file could not be read as CSV.')
     }
-    setRequest(null)
-    setAnalysis({ state: 'idle' })
+    setScanId(id => id + 1)
   }, [])
 
   const handleFile = useCallback(
@@ -55,24 +49,13 @@ export function App() {
   }
 
   const quality = report ? findQualityIssues(report) : []
-  const analyze = async () => {
-    if (!request?.ready) return
-    setAnalysis({ state: 'running' })
-    try {
-      setAnalysis({ state: 'done', result: await requestAnalysis(request) })
-    } catch (e) {
-      setAnalysis({ state: 'error', message: e instanceof Error ? e.message : 'The analysis request failed.' })
-    }
-  }
-
-  const validation = request?.ready ? validateSafeContextRequest(request.body) : null
 
   return (
     <main className="cs-app">
       <header>
         <p className="kicker">COGNISENTRY AI · EARLY-STAGE MVP</p>
         <h1>Scan a dataset locally. Review before any AI sees it.</h1>
-        <p className="privacy">Local analysis: this file is processed in your browser and is not uploaded. Only the safe-context preview below can be sent, and only after you approve it.</p>
+        <p className="privacy">Local analysis: this file is processed in your browser and is not uploaded. Prepare and approve a metadata-only payload locally. No AI request is sent in this milestone.</p>
       </header>
 
       <section aria-label="Upload">
@@ -139,38 +122,7 @@ export function App() {
 
           <section aria-label="Safe context">
             <h2>2. Safe context for AI analysis</h2>
-            <SafeContextPreview report={report} onRequestChange={setRequest} />
-            {validation && (
-              <p className={validation.ok ? 'ok' : 'error'}>
-                {validation.ok ? 'Server-side validation (run locally here): passed.' : `Server-side validation (run locally here) failed: ${validation.message}`}
-              </p>
-            )}
-          </section>
-
-          <section aria-label="Claude analysis" className="claude">
-            <h2>3. Claude analysis</h2>
-            <p>Claude reads only the safe context shown above: schema-level metadata and aggregates, never cell values, samples or your filename. Nothing is sent until you acknowledge the warnings and press the button.</p>
-            <button type="button" disabled={!request?.ready || analysis.state === 'running'} onClick={() => void analyze()}>
-              {analysis.state === 'running' ? 'Analyzing…' : 'Send safe context to Claude'}
-            </button>
-            {!request?.ready && <p className="note">Acknowledge the warnings in step 2 to enable this.</p>}
-            {analysis.state === 'error' && <p className="error" role="alert">{analysis.message}</p>}
-            {analysis.state === 'done' && analysis.result && (
-              analysis.result.analysis ? (
-                <div className="analysis" aria-label="Claude analysis result">
-                  <p>{analysis.result.analysis.summary}</p>
-                  <h3>Data-quality notes</h3>
-                  <ul>{analysis.result.analysis.data_quality_notes.map((n, i) => <li key={i}>{n.column ? <b>{n.column}: </b> : null}{n.note}</li>)}</ul>
-                  <h3>Questions this data could answer</h3>
-                  <ul>{analysis.result.analysis.suggested_questions.map((q, i) => <li key={i}>{q}</li>)}</ul>
-                  <h3>Limitations</h3>
-                  <ul>{analysis.result.analysis.limitations.map((l, i) => <li key={i}>{l}</li>)}</ul>
-                  <p className="note">AI-generated from metadata only. Verify before relying on it. Request SHA-256: <code>{analysis.result.payload_sha256}</code></p>
-                </div>
-              ) : (
-                <p className="note">The server validated the request but is in mock mode (no API key configured), so no model was called.</p>
-              )
-            )}
+            <SafeContextPreview key={scanId} report={report} />
           </section>
         </>
       )}
